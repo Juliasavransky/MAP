@@ -25,6 +25,10 @@
   .filter-btn.h.on  { background: #c0392b; color: white; }
   .filter-btn.tr  { border-color: #2c3e50; color: #2c3e50; }
   .filter-btn.tr.on { background: #2c3e50; color: white; }
+  .filter-btn.rt  { border-color: #6c3483; color: #6c3483; }
+  .filter-btn.rt.on { background: #6c3483; color: white; }
+  .filter-btn.st  { border-color: #117a65; color: #117a65; }
+  .filter-btn.st.on { background: #117a65; color: white; }
   #map { height: calc(100vh - 110px); }
   .pi { min-width: 240px; font-family: 'Segoe UI', Arial, sans-serif; direction: rtl; }
   .pi h3 { font-size: 15px; margin-bottom: 5px; color: #1a1a2e; }
@@ -55,6 +59,8 @@
   <div class="filter-btn s on" id="btn-s" onclick="toggle('s')">🟢 קניות</div>
   <div class="filter-btn h on" id="btn-h" onclick="toggle('h')">🔴 מלון</div>
   <div class="filter-btn tr" id="btn-tr" onclick="toggleTransit()">🚇 תחבורה ציבורית</div>
+  <div class="filter-btn rt" id="btn-rt" onclick="toggleRoutes()">🛤️ מסלולים</div>
+  <div class="filter-btn st" id="btn-st" onclick="toggleStations()">🚉 תחנות</div>
 </div>
 <div id="map"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -327,6 +333,159 @@ add('h',55.7025,12.5914,'🏨 Adina Apartment Hotel Copenhagen','מלון | בס
   'מטבח מלא בכל חדר — מושלם לסבא/סבתא לבישול כשר! ארוחת בוקר: א\'–ה\' מ-06:30 | ו\'–ש\' מ-08:00. 500מ מתחנת Østerport',
   'check-in 15:00 | check-out 11:00 | בריכה 05:00–23:00 | ארוחת בוקר א\'–ה\' 06:30–10:00','no');
 
+/* ─── TRANSIT STATIONS & ROUTES ─── */
+const stLayer = L.layerGroup();
+const rtLayer = L.layerGroup();
+let stActive = false, rtActive = false;
+
+function toggleStations() {
+  stActive = !stActive;
+  const btn = document.getElementById('btn-st');
+  if (stActive) { stLayer.addTo(map); btn.classList.add('on'); }
+  else { map.removeLayer(stLayer); btn.classList.remove('on'); }
+}
+function toggleRoutes() {
+  rtActive = !rtActive;
+  const btn = document.getElementById('btn-rt');
+  if (rtActive) { rtLayer.addTo(map); btn.classList.add('on'); }
+  else { map.removeLayer(rtLayer); btn.classList.remove('on'); }
+}
+
+// Station marker helper
+function mkSt(lat, lng, name, lines, color, note) {
+  const icon = L.divIcon({
+    html: `<div style="width:28px;height:28px;border-radius:50%;background:${color};border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;color:white;font-size:14px;font-weight:bold">⬤</div>`,
+    iconSize:[28,28], iconAnchor:[14,14], popupAnchor:[0,-16], className:''
+  });
+  const m = L.marker([lat,lng], { icon, zIndexOffset: -100 });
+  m.bindPopup(`<div class="pi"><h3>🚇 ${name}</h3><span class="tag" style="background:${color}">${lines}</span><p style="margin-top:6px;line-height:1.7">${note}</p></div>`, { maxWidth:270 });
+  stLayer.addLayer(m);
+}
+
+// Transit line helper (hotel→attraction routes)
+function mkRoute(coords, color, weight, dash, popup) {
+  const opts = { color, weight, opacity: 0.82, smoothFactor: 1.5, lineJoin: 'round' };
+  if (dash) opts.dashArray = dash;
+  const line = L.polyline(coords, opts);
+  if (popup) line.bindPopup(`<div class="pi" style="min-width:220px"><p style="line-height:1.7">${popup}</p></div>`, { maxWidth:310 });
+  rtLayer.addLayer(line);
+}
+
+// Food route helper (attraction→nearby food, thinner orange dashed)
+function mkFood(coords, popup) {
+  const line = L.polyline(coords, { color:'#e07b39', weight:3, opacity:0.65, dashArray:'8,5' });
+  if (popup) line.bindPopup(`<div class="pi" style="min-width:200px"><p style="line-height:1.7">🍽️ ${popup}</p></div>`, { maxWidth:280 });
+  rtLayer.addLayer(line);
+}
+
+// Waypoint constants
+const HOTEL      = [55.7025, 12.5914];
+const NORDHAVN   = [55.7063, 12.5912];
+const OSTERPORT  = [55.7094, 12.5778];
+const KNTORV     = [55.6803, 12.5865];
+const NORPORT    = [55.6832, 12.5717];
+const KBH_H      = [55.6726, 12.5648];
+const HELLERUP   = [55.7293, 12.5797];
+const ORESUND    = [55.6391, 12.6013];
+const FRED_SBERG = [55.6804, 12.5289];
+
+/* ── STATIONS ── */
+// S-tog = dark maroon #901447 | M4 = blue #0066cc | M1 = green #00a050
+// M2 = amber #c49a00 | M3 = red #d62728 | mixed/hub = #1a1a2e
+mkSt(55.7063, 12.5912, 'Nordhavn', 'M4', '#0066cc',
+  '~400מ מהמלון — הכי קרוב!<br>→ M4 ישיר לKongens Nytorv (~8 דקות)<br>מכאן גישה לכל שאר קווי המטרו');
+mkSt(55.7094, 12.5778, 'Østerport', 'S-tog • M3 • M4', '#901447',
+  '~500מ מהמלון.<br>→ S-tog דרום לNørreport (3 דקות) + Copenhagen H (12 דקות)<br>→ S-tog צפון לHellerup (5 דקות) לExperimentarium');
+mkSt(55.6803, 12.5865, 'Kongens Nytorv', 'M1 • M2 • M3 • M4', '#1a1a2e',
+  'הצומת הראשי — 4 קווי מטרו נפגשים כאן!<br>→ M1 (ירוק) לFrederiksberg/גן חיות<br>→ M2 (צהוב) לØresund/Blue Planet<br>→ 2 דקות הליכה לNyhavn');
+mkSt(55.6832, 12.5717, 'Nørreport', 'S-tog • M1 • M2', '#901447',
+  'הצומת השני בחשיבות.<br>→ 3 דקות הליכה לTorvehallerne<br>→ 5 דקות הליכה לRosenborg<br>→ Bus 9A לCopenHill מכאן');
+mkSt(55.6726, 12.5648, 'København H', 'S-tog • M3', '#555',
+  'תחנה מרכזית.<br>→ Tivoli: 5 דקות הליכה מזרחה<br>→ S-tog לØsterport: ~12 דקות');
+mkSt(55.7293, 12.5797, 'Hellerup', 'S-tog', '#555',
+  'S-tog — 2 תחנות צפונה מØsterport.<br>→ Experimentarium: 8 דקות הליכה דרומה');
+mkSt(55.6391, 12.6013, 'Øresund', 'M2', '#c49a00',
+  'M2 — ליד Blue Planet.<br>→ Blue Planet: ~20 דקות הליכה דרומה<br>→ חלופה: Bus 35 מהתחנה (~10 דקות)');
+mkSt(55.6804, 12.5289, 'Frederiksberg', 'M1', '#00a050',
+  'M1 — ~6 תחנות מKongens Nytorv.<br>→ גן חיות קופנהגן: 12 דקות הליכה דרומה');
+
+/* ── ROUTES: TRANSIT BACKBONE ── */
+// Walking: מלון → Nordhavn M4 (לBlue Planet, Zoo, Nyhavn via metro)
+mkRoute([HOTEL, NORDHAVN], '#888', 4, '5,5',
+  '🚶 הליכה: מלון → Nordhavn M4 (~5 דקות)<br>📍 שימוש: מסלולים לBlue Planet, גן חיות, Nyhavn');
+
+// Walking: מלון → Østerport (לTivoli, Experimentarium, Rosenborg, CopenHill)
+mkRoute([HOTEL, [55.704, 12.587], OSTERPORT], '#888', 4, '5,5',
+  '🚶 הליכה: מלון → Østerport (~7 דקות)<br>📍 שימוש: מסלולים לTivoli, Experimentarium, Rosenborg, CopenHill');
+
+// M4: Nordhavn → Østerport → Marmorkirken → Kongens Nytorv
+mkRoute([NORDHAVN, OSTERPORT, [55.688, 12.583], KNTORV], '#0066cc', 6, null,
+  '🚇 M4 (כחול): Nordhavn → Kongens Nytorv (~8 דקות)<br>⟳ החלפה בKongens Nytorv לM1 (גן חיות) או M2 (Blue Planet)');
+
+// S-tog: Østerport → Nørreport (1 תחנה!)
+mkRoute([OSTERPORT, [55.695, 12.572], NORPORT], '#901447', 6, null,
+  '🚂 S-tog: Østerport → Nørreport (1 תחנה, ~3 דקות!)<br>📍 שימוש: Rosenborg, גנים בוטניים, Torvehallerne, CopenHill');
+
+// S-tog: Nørreport → Copenhagen H (לTivoli)
+mkRoute([NORPORT, [55.679, 12.567], KBH_H], '#901447', 6, null,
+  '🚂 S-tog: Nørreport → København H (~5 דקות)<br>📍 שימוש: מסלול Tivoli');
+
+// S-tog: Østerport → Hellerup (צפון, לExperimentarium)
+mkRoute([OSTERPORT, [55.718, 12.579], HELLERUP], '#901447', 6, null,
+  '🚂 S-tog: Østerport → Hellerup (~5 דקות, 2 תחנות צפונה)<br>📍 שימוש: מסלול Experimentarium');
+
+// M1 (ירוק): Kongens Nytorv → Frederiksberg (לגן חיות)
+mkRoute([KNTORV, [55.680, 12.571], [55.680, 12.542], [55.681, 12.513], FRED_SBERG], '#00a050', 6, null,
+  '🚇 M1 (ירוק): Kongens Nytorv → Frederiksberg (~10 דקות, ~6 תחנות)<br>⟳ החלפה בKongens Nytorv מM4');
+
+// M2 (צהוב): Kongens Nytorv → Øresund (לBlue Planet)
+mkRoute([KNTORV, [55.669, 12.591], [55.652, 12.598], ORESUND], '#c49a00', 6, null,
+  '🚇 M2 (צהוב): Kongens Nytorv → Øresund (~15 דקות)<br>⟳ החלפה בKongens Nytorv מM4');
+
+// Bus 9A: Nørreport → CopenHill (אורנג\' מקווקו)
+mkRoute([NORPORT, [55.677, 12.585], [55.664, 12.597], [55.6497, 12.6078]], '#e07b39', 5, '10,4',
+  '🚌 Bus 9A: Nørreport → CopenHill (~20 דקות)<br>רדו בתחנה Vindmøllevej');
+
+/* ── WALKING FINAL APPROACHES (from transit → attraction) ── */
+mkRoute([KBH_H, [55.674, 12.565], [55.6736, 12.5681]], '#888', 3, '5,5',
+  '🚶 הליכה: København H → Tivoli (~5 דקות מזרחה)');
+mkRoute([HELLERUP, [55.728, 12.581], [55.7278, 12.5812]], '#888', 3, '5,5',
+  '🚶 הליכה: Hellerup → Experimentarium (~8 דקות)');
+mkRoute([ORESUND, [55.634, 12.599], [55.6285, 12.5965]], '#888', 3, '5,5',
+  '🚶 הליכה: Øresund → Blue Planet (~20 דקות)<br>חלופה: Bus 35 (~10 דקות)');
+mkRoute([FRED_SBERG, [55.677, 12.524], [55.6726, 12.5189]], '#888', 3, '5,5',
+  '🚶 הליכה: Frederiksberg → גן חיות (~12 דקות)');
+mkRoute([NORPORT, [55.685, 12.574], [55.6857, 12.5767]], '#888', 3, '5,5',
+  '🚶 הליכה: Nørreport → Rosenborg (~5 דקות)');
+mkRoute([NORPORT, [55.685, 12.572], [55.6862, 12.5733]], '#888', 3, '4,5',
+  '🚶 הליכה: Nørreport → גנים בוטניים (~7 דקות)');
+mkRoute([KNTORV, [55.680, 12.590], [55.6796, 12.5912]], '#888', 3, '5,5',
+  '🚶 Kongens Nytorv → Nyhavn (2 דקות הליכה!)');
+mkRoute([HOTEL, [55.700, 12.592], [55.690, 12.591], [55.6796, 12.5912]], '#aaa', 3, '4,6',
+  '🚶 הליכה ישירה מהמלון → Nyhavn (~15 דקות לאורך הנמל)\nחלופה מהירה יותר: M4 מNordhavn (~10 דקות)');
+mkRoute([HOTEL, [55.700, 12.594], [55.696, 12.597], [55.6929, 12.5993]], '#888', 4, '5,5',
+  '🚶 הליכה: מלון → Little Mermaid (~10 דקות!) — הכי קרוב מכל האטרקציות');
+
+/* ── FOOD ROUTES: attraction → nearby food (orange dashed) ── */
+mkFood([[55.6857, 12.5767], [55.683, 12.574], [55.6832, 12.5712]],
+  'Rosenborg → Torvehallerne: 3 דקות הליכה! כל אחד בוחר דוכן אחר');
+mkFood([[55.6862, 12.5733], [55.684, 12.572], [55.6832, 12.5712]],
+  'גנים בוטניים → Torvehallerne: 5 דקות הליכה');
+mkFood([[55.6796, 12.5912], [55.6808, 12.5870]],
+  'Nyhavn → Magasin food court: 2 דקות הליכה (קומה תחתית)');
+mkFood([[55.6285, 12.5965], [55.626, 12.592], [55.6247, 12.5851]],
+  'Blue Planet → Fields Copenhagen: ~15 דקות הליכה. Food court, מסעדות מגוונות');
+mkFood([[55.6726, 12.5189], [55.6728, 12.519], [55.6730, 12.5195]],
+  'גן חיות → Frederiksberg Center food court: 5 דקות הליכה');
+mkFood([[55.6736, 12.5681], [55.674, 12.574], [55.6736, 12.5860]],
+  'Tivoli → La Glace קונדיטוריה (1870): ~10 דקות הליכה צפונה-מזרחה');
+mkFood([[55.6497, 12.6078], [55.655, 12.601], [55.6630, 12.5913]],
+  'CopenHill → Reffen שוק רחוב: ~15 דקות הליכה. 35 דוכני אוכל בחוץ!');
+mkFood([[55.7278, 12.5812], [55.716, 12.589], [55.7050, 12.5950]],
+  'Experimentarium → Juno Bakery: ~20 דקות הליכה (לחמניות הל האייקוניות)');
+mkFood([[55.6929, 12.5993], [55.699, 12.597], [55.7050, 12.5950]],
+  'Little Mermaid → Juno Bakery: ~15 דקות הליכה בשכונה');
+
 /* ─── INIT LAYERS ─── */
 Object.values(layers).forEach(l => l.addTo(map));
 
@@ -340,8 +499,14 @@ legend.onAdd = () => {
     <div><span class="dot" style="background:#e07b39"></span> אוכל ושווקים</div>
     <div><span class="dot" style="background:#27ae60"></span> קניות</div>
     <div><span class="dot" style="background:#c0392b"></span> מלון</div>
-    <div style="margin-top:6px;font-size:11px;color:#555;border-top:1px solid #eee;padding-top:5px">🚇 לחצי "תחבורה ציבורית" לקווי מטרו/אוטובוס</div>
-    <div style="font-size:11px;color:#555">⚠️ חובה להזמין | 👍 מומלץ | ✅ ללא הזמנה</div>
+    <div style="margin-top:6px;font-size:11px;color:#555;border-top:1px solid #eee;padding-top:5px">⚠️ חובה להזמין | 👍 מומלץ | ✅ ללא הזמנה</div>
+    <div style="margin-top:6px;font-size:12px;font-weight:bold;border-top:1px solid #eee;padding-top:5px">🛤️ מסלולים מהמלון</div>
+    <div><span style="display:inline-block;width:22px;height:4px;background:#901447;margin-left:4px;vertical-align:middle;border-radius:2px"></span> S-tog (רכבת עירונית)</div>
+    <div><span style="display:inline-block;width:22px;height:4px;background:#0066cc;margin-left:4px;vertical-align:middle;border-radius:2px"></span> M4 (מטרו כחול)</div>
+    <div><span style="display:inline-block;width:22px;height:4px;background:#00a050;margin-left:4px;vertical-align:middle;border-radius:2px"></span> M1 (מטרו ירוק)</div>
+    <div><span style="display:inline-block;width:22px;height:4px;background:#c49a00;margin-left:4px;vertical-align:middle;border-radius:2px"></span> M2 (מטרו צהוב)</div>
+    <div><span style="display:inline-block;width:22px;height:4px;background:#e07b39;margin-left:4px;vertical-align:middle;border-radius:2px;border-bottom:2px dashed #e07b39"></span> אוטובוס / מסעדה קרובה</div>
+    <div><span style="display:inline-block;width:22px;height:4px;background:#888;margin-left:4px;vertical-align:middle;border-radius:2px"></span> - - הליכה</div>
   `;
   return div;
 };
