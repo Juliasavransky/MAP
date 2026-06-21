@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מפת קופנהגן — טיול יולי 2026</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f6fa; }
+  #header { background: #1a1a2e; color: white; padding: 14px 20px; display: flex; align-items: center; gap: 12px; }
+  #header h1 { font-size: 20px; margin: 0; }
+  #header span { font-size: 13px; color: #aaa; }
+  #controls { background: #fff; padding: 10px 16px; display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid #ddd; box-shadow: 0 2px 6px rgba(0,0,0,0.07); }
+  .filter-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 20px; border: 2px solid; cursor: pointer; font-size: 13px; font-weight: bold; transition: all 0.18s; user-select: none; background: #fff; }
+  .filter-btn.a   { border-color: #3a7bd5; color: #3a7bd5; }
+  .filter-btn.a.on  { background: #3a7bd5; color: white; }
+  .filter-btn.f   { border-color: #e07b39; color: #e07b39; }
+  .filter-btn.f.on  { background: #e07b39; color: white; }
+  .filter-btn.s   { border-color: #27ae60; color: #27ae60; }
+  .filter-btn.s.on  { background: #27ae60; color: white; }
+  .filter-btn.k   { border-color: #8e44ad; color: #8e44ad; }
+  .filter-btn.k.on  { background: #8e44ad; color: white; }
+  .filter-btn.h   { border-color: #c0392b; color: #c0392b; }
+  .filter-btn.h.on  { background: #c0392b; color: white; }
+  .filter-btn.tr  { border-color: #2c3e50; color: #2c3e50; }
+  .filter-btn.tr.on { background: #2c3e50; color: white; }
+  #map { height: calc(100vh - 110px); }
+  .pi { min-width: 240px; font-family: 'Segoe UI', Arial, sans-serif; direction: rtl; }
+  .pi h3 { font-size: 15px; margin-bottom: 5px; color: #1a1a2e; }
+  .pi .tag { display: inline-block; font-size: 11px; padding: 2px 9px; border-radius: 10px; color: white; margin-bottom: 8px; }
+  .pi p { font-size: 13px; color: #333; line-height: 1.55; }
+  .pi .price { background: #f0f4ff; border-radius: 6px; padding: 5px 8px; margin-top: 7px; font-size: 12px; color: #2c3e50; }
+  .pi .hours { background: #f7f7f7; border-radius: 6px; padding: 5px 8px; margin-top: 5px; font-size: 12px; color: #333; }
+  .pi .res { border-radius: 6px; padding: 5px 8px; margin-top: 5px; font-size: 12px; font-weight: 700; }
+  .pi .res-r { background: #ffe4e4; color: #c0392b; }
+  .pi .res-m { background: #fff8e1; color: #856404; }
+  .pi .res-n { background: #e8f5e9; color: #2e7d32; }
+  .pi .tip { margin-top: 7px; font-size: 12px; color: #777; font-style: italic; border-top: 1px solid #eee; padding-top: 5px; }
+  .legend { position: absolute; bottom: 28px; left: 12px; background: white; padding: 10px 14px; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.15); z-index: 1000; font-size: 13px; direction: rtl; }
+  .legend div { display: flex; align-items: center; gap: 7px; margin: 4px 0; }
+  .dot { width: 13px; height: 13px; border-radius: 50%; display: inline-block; }
+</style>
+</head>
+<body>
+<div id="header">
+  <div>
+    <h1>🗺️ מפת קופנהגן — יולי 2026</h1>
+    <span>לחצו על כל מיקום לפרטים • 11 משתתפים • לחצו 🚇 לקווי תחבורה ציבורית</span>
+  </div>
+</div>
+<div id="controls">
+  <div class="filter-btn a on" id="btn-a" onclick="toggle('a')">🔵 אטרקציות</div>
+  <div class="filter-btn f on" id="btn-f" onclick="toggle('f')">🟠 אוכל ושווקים</div>
+  <div class="filter-btn s on" id="btn-s" onclick="toggle('s')">🟢 קניות</div>
+  <div class="filter-btn k on" id="btn-k" onclick="toggle('k')">🟣 כשר</div>
+  <div class="filter-btn h on" id="btn-h" onclick="toggle('h')">🔴 מלון</div>
+  <div class="filter-btn tr" id="btn-tr" onclick="toggleTransit()">🚇 תחבורה ציבורית</div>
+</div>
+<div id="map"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const map = L.map('map', { zoomControl: true }).setView([55.682, 12.566], 13);
+
+const tileCarto = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 19
+});
+const tileOSM = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', maxZoom: 19
+});
+let transitMode = false;
+tileCarto.addTo(map);
+
+function toggleTransit() {
+  transitMode = !transitMode;
+  const btn = document.getElementById('btn-tr');
+  if (transitMode) {
+    map.removeLayer(tileCarto); tileOSM.addTo(map);
+    btn.classList.add('on'); btn.textContent = '🗺️ מפה רגילה';
+  } else {
+    map.removeLayer(tileOSM); tileCarto.addTo(map);
+    btn.classList.remove('on'); btn.textContent = '🚇 תחבורה ציבורית';
+  }
+}
+
+const COLORS = { a: '#3a7bd5', f: '#e07b39', s: '#27ae60', k: '#8e44ad', h: '#c0392b' };
+const EMOJIS  = { a: '🎡',     f: '🍽️',    s: '🛍️',    k: '✡️',    h: '🏨'    };
+
+function mkIcon(type) {
+  const c = COLORS[type], e = EMOJIS[type];
+  return L.divIcon({
+    html: `<div style="width:38px;height:38px;border-radius:50%;background:${c};border:3px solid white;box-shadow:0 3px 10px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;font-size:18px">${e}</div>`,
+    iconSize:[38,38], iconAnchor:[19,38], popupAnchor:[0,-40], className:''
+  });
+}
+
+const layers = { a: L.layerGroup(), f: L.layerGroup(), s: L.layerGroup(), k: L.layerGroup(), h: L.layerGroup() };
+const active  = { a: true, f: true, s: true, k: true, h: true };
+
+function toggle(t) {
+  active[t] = !active[t];
+  const btn = document.getElementById('btn-'+t);
+  if (active[t]) { layers[t].addTo(map); btn.classList.add('on'); }
+  else           { map.removeLayer(layers[t]); btn.classList.remove('on'); }
+}
+
+function add(type, lat, lng, name, tagLabel, desc, price, tip, hours, reservation) {
+  const m = L.marker([lat, lng], { icon: mkIcon(type) });
+  const priceHtml = price ? `<div class="price">💰 ${price}</div>` : '';
+  const hoursHtml = hours ? `<div class="hours">🕐 ${hours}</div>` : '';
+  let resHtml = '';
+  if      (reservation === 'required')    resHtml = `<div class="res res-r">⚠️ חובה להזמין מראש!</div>`;
+  else if (reservation === 'recommended') resHtml = `<div class="res res-m">👍 מומלץ להזמין מראש</div>`;
+  else if (reservation === 'no')          resHtml = `<div class="res res-n">✅ ניתן להגיע ללא הזמנה</div>`;
+  const tipHtml = tip ? `<div class="tip">💡 ${tip}</div>` : '';
+  m.bindPopup(
+    `<div class="pi"><h3>${name}</h3><span class="tag" style="background:${COLORS[type]}">${tagLabel}</span><p>${desc}</p>${priceHtml}${hoursHtml}${resHtml}${tipHtml}</div>`,
+    { maxWidth: 310 }
+  );
+  layers[type].addLayer(m);
+}
+
+/* ─── ATTRACTIONS ─── */
+add('a',55.6736,12.5681,'🎠 טיבולי גארדנס','אטרקציה | חובה',
+  'גנים קסומים עם מתקנים, מסעדות ומופעים חיים. כניסה כלולה ב-Copenhagen Card.',
+  'כניסה: 145 DKK/מבוגר (8+), 65 DKK/ילד (3–7) | Ride Pass: ~350–450 DKK נוסף',
+  'הגיעו בבוקר מוקדם — הכי שקט לתאומים. הזמינו מראש! shop.tivoli.dk',
+  '11:00–23:00 | ו\'–ש\' עד 00:00 | פתוח כל יולי','no');
+
+add('a',55.7278,12.5812,'🔬 Experimentarium','אטרקציה | ממולץ',
+  'מוזיאון מדע אינטראקטיבי בהלרופ (צפון). מושלם לכל הגילאים, כולל 7+. חינם ב-CC.',
+  'ללא CC: 248 DKK/מבוגר (12+), 154 DKK/ילד (2–11) — מחיר אונליין',
+  'פחות רועש מטיבולי — אידיאלי לתאומים על הספקטרום',
+  '9:30–17:00 כל ימות השנה','no');
+
+add('a',55.6285,12.5965,'🐠 Blue Planet / Den Blå Planet','אטרקציה | חובה',
+  'האקווריום הלאומי — מרהיב! יולי = עונת שיא. חינם ב-CC. ⚠️ חובה להזמין slot זמן אונליין!',
+  'יולי: 229 DKK/מבוגר (online), 123 DKK/ילד (online)',
+  'קרוב לשדה התעופה — שלבו ביום 29/7. Fields Mall 10 דקות ממנו',
+  '10:00–17:00 א\'–ש\' | ⭐ ראשון בשבוע: 10:00–21:00!','required');
+
+add('a',55.6726,12.5189,'🦒 גן חיות קופנהגן','אטרקציה | חובה',
+  'אחד הגנים הוותיקים באירופה — 160+ שנה. נגיש לקשישים. חינם ב-CC.',
+  '249 DKK/מבוגר (12+), 149 DKK/ילד (3–11)',
+  'ממש ליד קניון — מושלם לשלב קניות + זוולוגי ביום אחד',
+  '9:00–18:00 יומי (יולי)','no');
+
+add('a',55.6857,12.5767,'🏰 טירת Rosenborg','אטרקציה | בתוכנית',
+  'אין מעלית — לא מתאים לסבא/סבתא. מדרגות רבות. King\'s Garden בחוץ: חינם לגמרי ויפהפה!',
+  '~135 DKK/מבוגר | מתחת לגיל 18: חינם! | ב-CC: חינם',
+  'פיצלו: הצעירים נכנסים לטירה, הקשישים נהנים בגן. Torvehallerne 3 דקות הליכה',
+  '10:00–17:00 יומי | פתוח כל יולי','no');
+
+add('a',55.6796,12.5912,'🌈 Nyhavn','אטרקציה | חינם',
+  'הרחוב הצבעוני הסמלי. הטיול עצמו חינם. שייט תעלות כלול ב-CC (Stromma).',
+  'הרבר-בוס (קו 991/992): חינם עם כל כרטיס תחבורה!',
+  'אל תאכלו ממש על הקאנאל — יקר ותיירותי. עברו ל-Torvehallerne (10 דקות הליכה)',
+  'פתוח 24/7 | שייטים: 10:00–20:00','no');
+
+add('a',55.6497,12.6078,'⛷️ CopenHill','אטרקציה | לא ב-CC',
+  'מדרון סקי + קיר טיפוס (85מ) על גג מפעל אשפה. נוף מדהים מהגג. לא כלול ב-CC.',
+  'סיור מודרך (10+ אנשים): 160 DKK/אדם | סקי: 220 DKK/שעה',
+  'עם 11 אנשים מגיע הנחת קבוצה לסיור! copenhill.dk',
+  '9:00–17:00 | ⚠️ סגור בימי שני לחלוטין!','recommended');
+
+add('a',55.6862,12.5733,'🌿 גנים בוטניים + King\'s Garden','אטרקציה | חינם',
+  'שני פארקים ממש ליד Rosenborg — שניהם חינם לגמרי. מושלם לסבא/סבתא ולתאומים.',
+  'חינם לגמרי | פתוח כל השנה',
+  'ליד Torvehallerne — אפשר לאסוף ארוחת בוקר שם ולאכול בגן',
+  'גן המלך: 6:00–22:00 | גן בוטני: 8:30–18:00 (יולי)','no');
+
+add('a',55.6929,12.5993,'🧜 The Little Mermaid','אטרקציה | חינם',
+  'הפסל האייקוני ביותר של קופנהגן — 5 דקות הליכה מהמלון! קסטלט מרשים לידו.',
+  'חינם לגמרי',
+  'הכי שקט בבוקר מוקדם לפני ההמון. מושלם כיציאה ראשונה ביום ההגעה.',
+  'פתוח 24/7','no');
+
+/* ─── FOOD ─── */
+add('f',55.6832,12.5712,'🧺 Torvehallerne','שוק מקורה | ממולץ מאוד',
+  'השוק המקורה הטוב ביותר בקופנהגן. ממש ליד Nørreport. כל אחד הולך לדוכן אחר — מושלם לקבוצה!',
+  'ארוחת בוקר/צהריים: 50–120 DKK/אדם',
+  '3 דקות מRosenborg. דוכן Grød (דייסות) מדהים בבוקר',
+  'ב\'–ו\': 10:00–19:00 | ש\': 10:00–18:00 | ⚠️ א\': 11:00–17:00 בלבד','no');
+
+add('f',55.6630,12.5913,'🍢 Reffen — שוק רחוב','שוק אוכל | מושלם לקבוצה',
+  '35 דוכני אוכל, 10 ברים, אוויר פתוח. הכי טוב לקבוצה גדולה עם ילדים! כולם מוצאים משהו.',
+  '11:30–20:30 (א\'–ה\') | 11:00–01:00 (ו\'–ש\')',
+  'אוטובוס 9A מהמרכז. CopenHill 15 דקות הליכה — נוח לשלב',
+  'א\'–ה\': 11:30–20:30 | ו\'–ש\': 11:00–01:00 | פתוח אפריל–ספטמבר','no');
+
+add('f',55.6670,12.5575,'🥩 Kødbyen — רובע הבשר','מסעדות | ערב',
+  'שכונת מסעדות ובתי קפה ב-Vesterbro. לא תיירותי, מחירים הגיוניים יחסית.',
+  'ארוחת ערב: 150–250 DKK/אדם',
+  'מומלץ לערב שבו המבוגרים יוצאים בלי ילדים',
+  'רוב המסעדות: 17:30–24:00 | כמה גם לצהריים ו\'–א\'','recommended');
+
+add('f',55.6730,12.5200,'🍔 Frederiksberg Center — Food Court','אוכל | ליד גן החיות',
+  'Food court ממש ליד גן החיות. מקדונלד\'ס, סושי, מגוון מסעדות.',
+  '50–130 DKK/אדם',
+  '5 דקות הליכה מגן החיות',
+  'ב\'–ש\': 10:00–20:00 | א\': 11:00–17:00','no');
+
+add('f',55.6247,12.5851,'🦈 Fields Copenhagen — Food','קניון + אוכל | ליד Blue Planet',
+  'הקניון הגדול בדנמרק, 10 דקות מBlue Planet. מסעדות, food court, קפה.',
+  '80–180 DKK/אדם',
+  'שלבו אחרי Blue Planet בדרך חזרה ל-metro',
+  'ב\'–ש\': 10:00–20:00 | א\': 10:00–18:00','no');
+
+add('f',55.6796,12.5920,'🦞 Nyhavn — מסעדות','אוכל | תיירותי (להיזהר)',
+  'יפה להסתכל, יקר לאכול. לארוחה — חכו ל-Torvehallerne.',
+  'גלידה/קפה: 45–80 DKK | מסעדה מלאה: 200–350 DKK/אדם',
+  'לשתייה ולגלידה — כן. לארוחת צהריים — לא. זו המלכודת הכי קלאסית של תיירים',
+  'יומי 11:00–22:00','no');
+
+add('f',55.6736,12.5860,'🍰 La Glace — קונדיטוריה','קפה | קלאסיקה דנית 1870',
+  'הקונדיטוריה הישנה ביותר בדנמרק (1870). עוגות מדהימות. קרוב לStrøget.',
+  '75–120 DKK/פריט | Skovsangeren — העוגה המפורסמת',
+  'מושלם להביא משהו לפארק',
+  'ב\'–ש\': 8:30–17:30 | ש\': 9:00–16:00 | א\': 10:00–17:00','no');
+
+add('f',55.6810,12.5720,'🥪 Schønnemann — סמורבורד','מסעדה | קלאסי דני מאז 1877',
+  'מסעדת הסמורבורד האייקונית ביותר בקופנהגן. Hauser Plads 16 (ליד Nørreport). המטבח הדני האמיתי.',
+  '180–280 DKK/אדם',
+  'ליד Torvehallerne. ⚠️ פועל רק בצהריים — תכננו בהתאם!',
+  '⚠️ ב\'–ש\': 11:30–17:00 בלבד | ⛔ סגור ימי ראשון לחלוטין','required');
+
+add('f',55.6772,12.5800,'🍔 Gasoline Grill','המבורגרים | ללא הזמנה',
+  'ההמבורגרים הכי מפורסמים בקופנהגן — מתוך תחנת דלק ישנה. מספר סניפים בעיר.',
+  '130–180 DKK לארוחה',
+  'הגיעו מוקדם — עלול לאזול. אין ישיבה רבה.',
+  'יומי 11:00 עד אזל המלאי (בד"כ ~21:00)','no');
+
+add('f',55.7050,12.5950,'🥐 Juno the Bakery','אפייה | לחמניות הל אייקוניות',
+  'האופייה שהפכה לחמניות הל למפורסמות בעולם. Århusgade 48 — ~8 דקות הליכה מהמלון!',
+  '35–65 DKK/פריט',
+  'הגיעו מוקדם — הלחמניות נגמרות לפני הצהריים. קנו לדרך!',
+  'ב\'–ש\': 7:30–17:00 | ש\'–א\': 8:00–15:00','no');
+
+add('f',55.6695,12.5555,'🐷 WarPigs Brewpub','BBQ + בירה | ללא הזמנה',
+  'BBQ טקסאסי + בירת מיקלר. ב-Kødbyen (רובע הבשר), Vesterbro. מושלם לקבוצה גדולה!',
+  '150–250 DKK/אדם',
+  'ילדים מוזמנים בצהריים. לא מתאים לאוכל כשר.',
+  'יומי 11:00–23:00 | ו\'–ש\' עד 00:00','no');
+
+add('f',55.6685,12.5540,'🦐 Kødbyens Fiskebar','פירות ים | מישלן Bib Gourmand',
+  'מסעדת פירות הים המובחרת בקופנהגן. Flæsketorvet 100, Vesterbro. מישלן Bib Gourmand 2026.',
+  '250–350 DKK/אדם',
+  'לא לכשר. הכי טוב לערב בלי ילדים. הזמינו שבוע מראש!',
+  'ב\'–ה\': 17:30–24:00 | ו\': 17:30–02:00 | ש\'–א\': 11:30–02:00','recommended');
+
+add('f',55.6985,12.5700,'☕ Café Bopa','קפה | שכונתי, ידידותי לילדים',
+  'קפה שכונתי פופולרי באוסטרברו. אוכל ביתי, ילדים מוזמנים, גינה בחוץ.',
+  '80–140 DKK/אדם',
+  '~15 דקות הליכה מהמלון. מקום טוב לבוקר רגוע.',
+  'יומי 9:00–22:00','no');
+
+add('f',55.6855,12.5740,'🥗 Aamanns — סמורבורד מודרני','מסעדה | ליד Østerport',
+  'סמורבורד עכשווי ומעודן. ליד Østerport — קרוב למלון יחסית.',
+  '180–280 DKK/אדם',
+  'חלופה טובה לSchønnemann אם לא הצלחתם להזמין שם.',
+  'ב\'–ש\': 11:30–22:00 | ⛔ סגור ימי ראשון','recommended');
+
+/* ─── SHOPPING ─── */
+add('s',55.6775,12.5780,'🛒 Strøget — מדרחוב ראשי','קניות | מרכזי',
+  '1.1 ק"מ חנויות: H&M, Zara, Lego Store, Illum, Magasin, Tommy Hilfiger ועוד.',
+  'רוב החנויות פתוחות 10:00–19:00',
+  'חנות Lego Store הרשמית — חובה לילדים',
+  'ב\'–ש\': 10:00–19:00 | ש\': 10:00–17:00 | א\': 11:00–17:00','no');
+
+add('s',55.6808,12.5870,'🏬 Magasin du Nord','כלבו | פרמיום',
+  'כלבו קופנהגן הפרמיום. בגדים, יופי, פודים, סוונירים דניים. על Kongens Nytorv.',
+  'פתוח 10:00–19:00 | food market בקומה תחתית',
+  'ממש ליד Nyhavn — 2 דקות הליכה. קומת food market מצוינת לצהריים',
+  'ב\'–ש\': 10:00–19:00 | ש\': 10:00–17:00 | א\': 11:00–17:00','no');
+
+add('s',55.6730,12.5195,'🏪 Frederiksberg Center','קניות | ליד גן החיות',
+  'קניון 5 דקות מגן החיות. H&M, Matas, Søstrene Grene, Elgiganten.',
+  'פתוח 10:00–20:00',
+  'מושלם לשלב: גן חיות → קניות → אוכל, הכל ביום אחד',
+  'ב\'–ש\': 10:00–20:00 | ש\': 10:00–17:00 | א\': 10:00–17:00','no');
+
+add('s',55.6247,12.5851,'🏗️ Fields Copenhagen','קניות | קניון ענק',
+  'הקניון הגדול ביותר בדנמרק. H&M, Zara, IKEA Food, Elgiganten ועשרות חנויות.',
+  'פתוח 10:00–20:00',
+  'אחרי Blue Planet — Fields בדרך חזרה ל-metro',
+  'ב\'–ש\': 10:00–20:00 | ש\'–א\': 10:00–18:00','no');
+
+add('s',55.6750,12.5600,'🛒 Netto / Rema 1000','סופרמרקט | זול',
+  'הרשתות הזולות ביותר בדנמרק. לארוחות בוקר, פיקניקים, שתייה, חטיפים.',
+  '30–60% זול יותר מחנויות נוחות',
+  'חפשו Netto קרוב למלון (Østerbrogade) — חיסכון של אלפי קרונות',
+  'רוב הסניפים: 7:00–22:00 יומי','no');
+
+add('s',55.6779,12.5835,'🎭 Illum — כלבו עיצוב','קניות | Design',
+  'כלבו עיצוב ומותגים על Strøget. Georg Jensen, Royal Copenhagen, Scandinavian design.',
+  'פתוח 10:00–19:00',
+  'לסוונירים דניים איכותיים: Georg Jensen וRoyal Copenhagen',
+  'ב\'–ש\': 10:00–19:00 | ש\': 10:00–17:00 | א\': 11:00–17:00','no');
+
+add('s',55.6790,12.5730,'🏠 Hay House Copenhagen','עיצוב | דני קלאסי',
+  'חנות הבית של HAY — מותג עיצוב דני מפורסם. כריות, כלים, פריטי עיצוב לבית. ליד Strøget.',
+  '100–800 DKK/פריט',
+  'מתנות מעולות לבית.',
+  'ב\'–ש\': 10:00–18:00 | ש\': 10:00–16:00 | א\': סגור','no');
+
+add('s',55.6800,12.5725,'👗 Ganni — אופנה דנית','אופנה | מותג מקומי',
+  'מותג האופנה הדני המוצלח ביותר. סטייל סקנדינבי ייחודי. Kronprinsensgade.',
+  '400–2500 DKK/פריט',
+  'מתנה מהממת לחזור הביתה איתה.',
+  'ב\'–ש\': 10:00–18:00 | ש\': 10:00–15:00 | א\': סגור','no');
+
+add('s',55.7010,12.5680,'🏡 Normann Copenhagen','עיצוב | מוזיאון-חנות',
+  'חנות עיצוב סקנדינבי מדהימה ב-Østerbro. Østerbrogade 70. כמו מוזיאון עיצוב פתוח! קרוב למלון.',
+  '150–2000+ DKK',
+  '15 דקות הליכה מהמלון. מושלם לבוקר שקט בשכונה.',
+  'ב\'–ש\': 10:00–18:00 | ש\': 10:00–15:00 | א\': סגור','no');
+
+add('s',55.6760,12.5650,'🧸 Lego Store Copenhagen','קניות | ילדים',
+  'החנות הרשמית של לגו על Strøget. סטים בלעדיים, בנייה חינם, צבעוני ומשמח.',
+  'סטים: 50–1000+ DKK',
+  'חובה לילדים! בפינת הבנייה החינמית אפשר לבלות שעה.',
+  'ב\'–ש\': 10:00–20:00 | ש\': 10:00–18:00 | א\': 11:00–18:00','no');
+
+/* ─── HOTEL ─── */
+add('h',55.7025,12.5914,'🏨 Adina Apartment Hotel Copenhagen','מלון | בסיס הטיול',
+  'מלון דירות עם מטבח מלא בכל חדר, בריכה מקורה מחוממת, סאונה וחדר כושר. Amerika Plads 7, אוסטרברו.',
+  'check-in: 15:00 | check-out: 11:00 | חנייה: 290 DKK/24h | בריכה: 05:00–23:00',
+  'מטבח מלא בכל חדר — מושלם לסבא/סבתא לבישול כשר! ארוחת בוקר: א\'–ה\' מ-06:30 | ו\'–ש\' מ-08:00. 500מ מתחנת Østerport',
+  'check-in 15:00 | check-out 11:00 | בריכה 05:00–23:00 | ארוחת בוקר א\'–ה\' 06:30–10:00','no');
+
+/* ─── KOSHER ─── */
+add('k',55.6810,12.5700,'✡️ Taim Restaurant','כשר | היחידה בעיר',
+  '<b>המסעדה הכשרה המוסמכת היחידה בקופנהגן!</b> אוכל ים תיכוני/ישראלי ליד בית הכנסת הגדול.',
+  'הזמינו מראש! | taimkosher.dk',
+  'מומלץ לסבא/סבתא לפחות 2–3 פעמים',
+  'בדקו שעות מעודכנות באתר — משתנות לפי עונה','required');
+
+add('k',55.6815,12.5695,'🕍 D&A Kosher — קייטרינג','כשר | קייטרינג בלבד',
+  'קייטרינג כשר בבניין הקהילה — Krystalgade 12. לא מסעדה פתוחה. להזמין מראש באימייל.',
+  'מתאים להזמנת אוכל לאירוע/ארוחה גדולה',
+  'ממש ליד Taim וליד בית הכנסת הגדול',
+  'בהזמנה מראש בלבד','required');
+
+add('k',55.6815,12.5698,'🕌 בית הכנסת הגדול','כשר | קהילה יהודית',
+  'הסינגוגה הגדולה של קופנהגן — Krystalgade 12. מרכז הקהילה היהודית.',
+  'כדאי לשאול על שירותים לתיירים ישראלים ועל קניית מוצרים כשרים',
+  'כל הכשרות מרוכזת בסביבה הזו — Taim, D&A, ובית כנסת — הכל מרחק הליכה',
+  'ש\'–א\': שחרית 9:00 | ב\'–ה\': שחרית 7:00','no');
+
+/* ─── INIT LAYERS ─── */
+Object.values(layers).forEach(l => l.addTo(map));
+
+/* ─── LEGEND ─── */
+const legend = L.control({ position: 'bottomleft' });
+legend.onAdd = () => {
+  const div = L.DomUtil.create('div', 'legend');
+  div.innerHTML = `
+    <b style="font-size:13px">מקרא</b>
+    <div><span class="dot" style="background:#3a7bd5"></span> אטרקציות</div>
+    <div><span class="dot" style="background:#e07b39"></span> אוכל ושווקים</div>
+    <div><span class="dot" style="background:#27ae60"></span> קניות</div>
+    <div><span class="dot" style="background:#8e44ad"></span> כשר</div>
+    <div><span class="dot" style="background:#c0392b"></span> מלון</div>
+    <div style="margin-top:6px;font-size:11px;color:#555;border-top:1px solid #eee;padding-top:5px">🚇 לחצי "תחבורה ציבורית" לקווי מטרו/אוטובוס</div>
+    <div style="font-size:11px;color:#555">⚠️ חובה להזמין | 👍 מומלץ | ✅ ללא הזמנה</div>
+  `;
+  return div;
+};
+legend.addTo(map);
+</script>
+</body>
+</html>
