@@ -53,7 +53,6 @@
   <div class="filter-btn a on" id="btn-a" onclick="toggle('a')">🔵 אטרקציות</div>
   <div class="filter-btn f on" id="btn-f" onclick="toggle('f')">🟠 אוכל ושווקים</div>
   <div class="filter-btn s on" id="btn-s" onclick="toggle('s')">🟢 קניות</div>
-  <div class="filter-btn k on" id="btn-k" onclick="toggle('k')">🟣 כשר</div>
   <div class="filter-btn h on" id="btn-h" onclick="toggle('h')">🔴 מלון</div>
   <div class="filter-btn tr" id="btn-tr" onclick="toggleTransit()">🚇 תחבורה ציבורית</div>
 </div>
@@ -328,25 +327,6 @@ add('h',55.7025,12.5914,'🏨 Adina Apartment Hotel Copenhagen','מלון | בס
   'מטבח מלא בכל חדר — מושלם לסבא/סבתא לבישול כשר! ארוחת בוקר: א\'–ה\' מ-06:30 | ו\'–ש\' מ-08:00. 500מ מתחנת Østerport',
   'check-in 15:00 | check-out 11:00 | בריכה 05:00–23:00 | ארוחת בוקר א\'–ה\' 06:30–10:00','no');
 
-/* ─── KOSHER ─── */
-add('k',55.6810,12.5700,'✡️ Taim Restaurant','כשר | היחידה בעיר',
-  '<b>המסעדה הכשרה המוסמכת היחידה בקופנהגן!</b> אוכל ים תיכוני/ישראלי ליד בית הכנסת הגדול.',
-  'הזמינו מראש! | taimkosher.dk',
-  'מומלץ לסבא/סבתא לפחות 2–3 פעמים',
-  'בדקו שעות מעודכנות באתר — משתנות לפי עונה','required');
-
-add('k',55.6815,12.5695,'🕍 D&A Kosher — קייטרינג','כשר | קייטרינג בלבד',
-  'קייטרינג כשר בבניין הקהילה — Krystalgade 12. לא מסעדה פתוחה. להזמין מראש באימייל.',
-  'מתאים להזמנת אוכל לאירוע/ארוחה גדולה',
-  'ממש ליד Taim וליד בית הכנסת הגדול',
-  'בהזמנה מראש בלבד','required');
-
-add('k',55.6815,12.5698,'🕌 בית הכנסת הגדול','כשר | קהילה יהודית',
-  'הסינגוגה הגדולה של קופנהגן — Krystalgade 12. מרכז הקהילה היהודית.',
-  'כדאי לשאול על שירותים לתיירים ישראלים ועל קניית מוצרים כשרים',
-  'כל הכשרות מרוכזת בסביבה הזו — Taim, D&A, ובית כנסת — הכל מרחק הליכה',
-  'ש\'–א\': שחרית 9:00 | ב\'–ה\': שחרית 7:00','no');
-
 /* ─── INIT LAYERS ─── */
 Object.values(layers).forEach(l => l.addTo(map));
 
@@ -359,7 +339,6 @@ legend.onAdd = () => {
     <div><span class="dot" style="background:#3a7bd5"></span> אטרקציות</div>
     <div><span class="dot" style="background:#e07b39"></span> אוכל ושווקים</div>
     <div><span class="dot" style="background:#27ae60"></span> קניות</div>
-    <div><span class="dot" style="background:#8e44ad"></span> כשר</div>
     <div><span class="dot" style="background:#c0392b"></span> מלון</div>
     <div style="margin-top:6px;font-size:11px;color:#555;border-top:1px solid #eee;padding-top:5px">🚇 לחצי "תחבורה ציבורית" לקווי מטרו/אוטובוס</div>
     <div style="font-size:11px;color:#555">⚠️ חובה להזמין | 👍 מומלץ | ✅ ללא הזמנה</div>
