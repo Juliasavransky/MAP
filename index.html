@@ -57,6 +57,7 @@
   <div class="filter-btn a on" id="btn-a" onclick="toggle('a')">🔵 אטרקציות</div>
   <div class="filter-btn f on" id="btn-f" onclick="toggle('f')">🟠 אוכל ושווקים</div>
   <div class="filter-btn s on" id="btn-s" onclick="toggle('s')">🟢 קניות</div>
+
   <div class="filter-btn h on" id="btn-h" onclick="toggle('h')">🔴 מלון</div>
   <div class="filter-btn tr" id="btn-tr" onclick="toggleTransit()">🚇 תחבורה ציבורית</div>
   <div class="filter-btn rt" id="btn-rt" onclick="toggleRoutes()">🛤️ מסלולים</div>
@@ -88,8 +89,8 @@ function toggleTransit() {
   }
 }
 
-const COLORS = { a: '#3a7bd5', f: '#e07b39', s: '#27ae60', k: '#8e44ad', h: '#c0392b' };
-const EMOJIS  = { a: '🎡',     f: '🍽️',    s: '🛍️',    k: '✡️',    h: '🏨'    };
+const COLORS = { a: '#3a7bd5', f: '#e07b39', s: '#27ae60', h: '#c0392b' };
+const EMOJIS  = { a: '🎡',     f: '🍽️',    s: '🛍️',    h: '🏨'    };
 
 function mkIcon(type) {
   const c = COLORS[type], e = EMOJIS[type];
@@ -99,8 +100,8 @@ function mkIcon(type) {
   });
 }
 
-const layers = { a: L.layerGroup(), f: L.layerGroup(), s: L.layerGroup(), k: L.layerGroup(), h: L.layerGroup() };
-const active  = { a: true, f: true, s: true, k: true, h: true };
+const layers = { a: L.layerGroup(), f: L.layerGroup(), s: L.layerGroup(), h: L.layerGroup() };
+const active  = { a: true, f: true, s: true, h: true };
 
 function toggle(t) {
   active[t] = !active[t];
@@ -326,12 +327,51 @@ add('s',55.6760,12.5650,'🧸 Lego Store Copenhagen','קניות | ילדים',
   'חובה לילדים! בפינת הבנייה החינמית אפשר לבלות שעה.',
   'ב\'–ש\': 10:00–20:00 | ש\': 10:00–18:00 | א\': 11:00–18:00','no');
 
+/* ─── BEAUTY & DISCOUNT ─── */
+add('s',55.6769,12.5731,'💸 Normal — דיסקאונט ביוטי','קניות | הכי זול בעיר',
+  '<b>רשת הדיסקאונט הדנית — בדיוק כמו פיקסד-פרייס לביוטי.</b><br>מוכרת <b>The Ordinary, Garnier, NYX, L\'Oréal, Schwarzkopf</b> ועוד — לרוב 20–40% זול ממקומות אחרים. גם נרות, ממתקים, פריטי בית. Nygade 1–3, על Strøget. סניפים גם ב-Frederiksberg Center.',
+  'The Ordinary Niacinamide 10%: ~25–30 DKK | סרום היאלורוני: ~30 DKK',
+  '⭐ עדיפות ראשונה לקנייה! בדקי מה כבר אזל לפני שמחפשים במקום אחר.',
+  'ב\'–ש\': 10:00–20:00 | ש\'–א\': 10:00–18:00','no');
+
+add('s',55.6779,12.5760,'🧴 Matas — ספר-פארם דנית','ביוטי | The Ordinary + מותגים סקנדינביים',
+  '<b>רשת הבריאות/יופי הגדולה בדנמרק</b> — שקולה לסופר-פארם. יש ב<b>כל הסניפים</b>:<br>✅ <b>The Ordinary</b> (מגוון מלא)<br>✅ מותגים סקנדינביים: REN, Lumene, Verso, Apoteket<br>✅ ויטמינים, תוספים (מגנזיום, אומגה וכו\')<br>✅ מוצרי מותג פרטי Matas — מאוד טובים ומחיר נמוך<br>📍 מספר סניפים על Strøget וסביבו.',
+  'The Ordinary Vitamin C Suspension: ~60 DKK | AHA 30%+BHA 2%: ~80 DKK',
+  'הסניף בFrederiksberg Center (כבר על המפה) גדול במיוחד. חפשי מוצרי Matas Natur — כמות גדולה + מחיר שפוי.',
+  'ב\'–ש\': 9:30–19:00 | ש\': 10:00–17:00 | א\': 11:00–17:00','no');
+
+add('s',55.6776,12.5793,'🏷️ Acne Archive — אאוטלט מעצב','אאוטלט | 40–60% הנחה',
+  '<b>חנות הסטוק הרשמית של Acne Studios</b> — המותג הסקנדינבי הכי נחשק. עונות קודמות, 40–60% הנחה. Vimmelskaftet 41 (חלק מ-Strøget).<br>מוצאים בגדים, ג\'ינס, נעליים ואביזרים.',
+  'חולצות: 400–800 DKK (במקום 1,400) | סוודר: 800–1,200 DKK (במקום 2,500)',
+  'הסטוק מתחלף בלי הודעה — אל תדחי לסוף הטיול. בדקי בבוקר.',
+  'ב\'–ש\': 10:00–18:00 | ש\': 10:00–16:00 | א\': סגור','no');
+
+add('s',55.6770,12.5645,'👗 Zizzi — פלאס-סייז דנית','אופנה | מידות גדולות 34–58 EU',
+  '<b>המותג הדני הגדול ביותר לאופנת פלאס-סייז.</b> עיצוב סקנדינבי מודרני, מידות 34–58 EU — מידות 46–48 בשפע. ג\'ינס, שמלות, בגדי יומיום. ביצוע טוב ומחירים הגיוניים לדנמרק.',
+  'חולצות: 200–400 DKK | שמלות: 400–700 DKK | ג\'ינס: 400–600 DKK',
+  'בקופנהגן יש גם Pont Neuf וZOEY (פלאס-סייז סקנדינביות). חיסכון גדול על משלוח לישראל.',
+  'ב\'–ש\': 10:00–18:00 | ש\': 10:00–16:00','no');
+
+add('s',55.6465,12.2813,'🏬 Copenhagen Designer Outlet','אאוטלט | מחוץ לעיר — 25 דקות ברכבת',
+  '<b>האאוטלט הגדול ביותר בדנמרק — 80+ חנויות, 30–70% הנחה.</b><br>מותגים: Levi\'s, Tommy Hilfiger, Nike, Adidas, Calvin Klein, Gant, Samsøe Samsøe, Replay, Puma ועוד. מחובר ל-City2 קניון.<br>📍 Cityringen 6, Taastrup — יש לזום החוצה כדי לראות על המפה!',
+  '2 קמות, חניה חינם, food court, נגיש לנכים',
+  '🚂 S-tog: København H → Høje Taastrup (קו E, ~25 דקות, כלול ב-CC). שיבצי יום שלם — שתי שעות נסיעה הלוך ושוב.',
+  'ב\'–ש\': 10:00–20:00 | ש\': 10:00–18:00 | א\': 10:00–17:00','no');
+
+/* ─── DESIGN MUSEUM (Julia solo) ─── */
+add('a',55.6913,12.5878,'🎨 Designmuseum Danmark','מוזיאון עיצוב | ג\'וליה בלבד',
+  '<b>המוזיאון הלאומי לעיצוב דני.</b> Bredgade 68 — 5 דקות הליכה מ-Marmorkirken (M4), ~15 דקות מהמלון.<br><br><b>תערוכות ביולי 2026:</b><br>🖼️ <b>Hokusai</b> — 40 הדפסי עץ יפניים (עד 9/8)<br>📐 <b>LABORATORIUM</b> — חדר הנסיונות של Kontrapunkt (עד 18/10)<br>👘 <b>Japan Modern Poster</b> — עיצוב גרפי יפני (עד 9/8)<br>🧵 <b>Nikoline Liv Andersen</b> — אמנות טקסטיל (עד 27/9)',
+  '🎟️ מבוגר: 140 DKK | Copenhagen Card: <b>חינם!</b> | קבוצה 10+: 110 DKK/אדם',
+  '⭐ המלצה: ביקור ב-23/7 (יום ה\' — פתוח עד 20:00!) אחרי הצ\'ק-אין בזמן שהשאר נחים. או 29/7 (יום ד\') בזמן שהקבוצה קונה ב-Strøget. קנו כרטיסים online מראש.',
+  'יולי–אוגוסט: יומי 10:00–18:00 | ⭐ יום ה\' עד 20:00! | ⚠️ קופה סוגרת שעה לפני!','no');
+
 /* ─── HOTEL ─── */
 add('h',55.7025,12.5914,'🏨 Adina Apartment Hotel Copenhagen','מלון | בסיס הטיול',
   'מלון דירות עם מטבח מלא בכל חדר, בריכה מקורה מחוממת, סאונה וחדר כושר. Amerika Plads 7, אוסטרברו.',
   'check-in: 15:00 | check-out: 11:00 | חנייה: 290 DKK/24h | בריכה: 05:00–23:00',
   'מטבח מלא בכל חדר — מושלם לסבא/סבתא לבישול כשר! ארוחת בוקר: א\'–ה\' מ-06:30 | ו\'–ש\' מ-08:00. 500מ מתחנת Østerport',
   'check-in 15:00 | check-out 11:00 | בריכה 05:00–23:00 | ארוחת בוקר א\'–ה\' 06:30–10:00','no');
+
 
 /* ─── TRANSIT STATIONS & ROUTES ─── */
 const stLayer = L.layerGroup();
@@ -406,6 +446,8 @@ mkSt(55.7293, 12.5797, 'Hellerup', 'S-tog', '#555',
   'S-tog — 2 תחנות צפונה מØsterport.<br>→ Experimentarium: 8 דקות הליכה דרומה');
 mkSt(55.6391, 12.6013, 'Øresund', 'M2', '#c49a00',
   'M2 — ליד Blue Planet.<br>→ Blue Planet: ~20 דקות הליכה דרומה<br>→ חלופה: Bus 35 מהתחנה (~10 דקות)');
+mkSt(55.6877, 12.5839, 'Marmorkirken', 'M4', '#0066cc',
+  'M4 — בין Nordhavn לKongens Nytorv.<br>→ Designmuseum Danmark: 5 דקות הליכה צפונה-מזרחה<br>→ מהמלון: M4 מNordhavn, 2 תחנות (~5 דקות נסיעה)');
 mkSt(55.6804, 12.5289, 'Frederiksberg', 'M1', '#00a050',
   'M1 — ~6 תחנות מKongens Nytorv.<br>→ גן חיות קופנהגן: 12 דקות הליכה דרומה');
 
@@ -465,6 +507,9 @@ mkRoute([HOTEL, [55.700, 12.592], [55.690, 12.591], [55.6796, 12.5912]], '#aaa',
   '🚶 הליכה ישירה מהמלון → Nyhavn (~15 דקות לאורך הנמל)\nחלופה מהירה יותר: M4 מNordhavn (~10 דקות)');
 mkRoute([HOTEL, [55.700, 12.594], [55.696, 12.597], [55.6929, 12.5993]], '#888', 4, '5,5',
   '🚶 הליכה: מלון → Little Mermaid (~10 דקות!) — הכי קרוב מכל האטרקציות');
+// Designmuseum: M4 Marmorkirken → museum (Julia solo)
+mkRoute([[55.6877, 12.5839], [55.6895, 12.5858], [55.6913, 12.5878]], '#888', 3, '5,5',
+  '🚶 הליכה: Marmorkirken M4 → Designmuseum (~5 דקות)\n🎨 מסלול של ג\'וליה: מלון → Nordhavn M4 → Marmorkirken → מוזיאון (~15 דקות סה"כ)');
 
 /* ── FOOD ROUTES: attraction → nearby food (orange dashed) ── */
 mkFood([[55.6857, 12.5767], [55.683, 12.574], [55.6832, 12.5712]],
@@ -498,6 +543,7 @@ legend.onAdd = () => {
     <div><span class="dot" style="background:#3a7bd5"></span> אטרקציות</div>
     <div><span class="dot" style="background:#e07b39"></span> אוכל ושווקים</div>
     <div><span class="dot" style="background:#27ae60"></span> קניות</div>
+    <div><span style="font-size:13px">🧴</span> ביוטי/סטוק = ירוק כהה</div>
     <div><span class="dot" style="background:#c0392b"></span> מלון</div>
     <div style="margin-top:6px;font-size:11px;color:#555;border-top:1px solid #eee;padding-top:5px">⚠️ חובה להזמין | 👍 מומלץ | ✅ ללא הזמנה</div>
     <div style="margin-top:6px;font-size:12px;font-weight:bold;border-top:1px solid #eee;padding-top:5px">🛤️ מסלולים מהמלון</div>
