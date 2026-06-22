@@ -29,6 +29,10 @@
   .filter-btn.rt.on { background: #6c3483; color: white; }
   .filter-btn.st  { border-color: #117a65; color: #117a65; }
   .filter-btn.st.on { background: #117a65; color: white; }
+  .filter-btn.v   { border-color: #9b59b6; color: #9b59b6; }
+  .filter-btn.v.on { background: #9b59b6; color: white; }
+  .filter-btn.ky  { border-color: #16a085; color: #16a085; }
+  .filter-btn.ky.on { background: #16a085; color: white; }
   #map { height: calc(100vh - 110px); }
   .pi { min-width: 240px; font-family: 'Segoe UI', Arial, sans-serif; direction: rtl; }
   .pi h3 { font-size: 15px; margin-bottom: 5px; color: #1a1a2e; }
@@ -60,6 +64,8 @@
   <div class="filter-btn a on" id="btn-a" onclick="toggle('a')">🔵 אטרקציות</div>
   <div class="filter-btn f on" id="btn-f" onclick="toggle('f')">🟠 אוכל ושווקים</div>
   <div class="filter-btn s on" id="btn-s" onclick="toggle('s')">🟢 קניות</div>
+  <div class="filter-btn v on" id="btn-v" onclick="toggle('v')">♻️ וינטייג'</div>
+  <div class="filter-btn ky on" id="btn-ky" onclick="toggle('ky')">🧸 צעצועים</div>
 
   <div class="filter-btn h on" id="btn-h" onclick="toggle('h')">🔴 מלון</div>
   <div class="filter-btn tr" id="btn-tr" onclick="toggleTransit()">🚇 תחבורה ציבורית</div>
@@ -111,6 +117,12 @@ const WEBSITE_URLS = {
   // Kids
   '🎲 Faraos Cigarer — קומיקס ומשחקים':   'https://www.faraoscigarer.dk',
   '🪀 Fætter BR — צעצועי דנמרק':          'https://www.br.dk',
+  // Vintage / secondhand / plus-size
+  '👗 Zizzi (בתוך Fields)':               'https://www.zizzi.com',
+  '👗 Unfold Copenhagen':                  'https://unfoldcopenhagen.com',
+  '♻️ O-S-V Secondhand':                   'https://osvsecondhand.com',
+  '♻️ Episode':                            'https://episode.eu',
+  '♻️ Røde Kors Megastore':                'https://hovedstaden.rodekors.dk/en/roede-kors-megastore-noerrebro/',
   // Hotel
   '🏨 Adina Apartment Hotel Copenhagen':   'https://www.adinahotels.com/en/apartments/copenhagen',
 };
@@ -138,8 +150,8 @@ function toggleTransit() {
   }
 }
 
-const COLORS = { a: '#3a7bd5', f: '#e07b39', s: '#27ae60', h: '#c0392b' };
-const EMOJIS  = { a: '🎡',     f: '🍽️',    s: '🛍️',    h: '🏨'    };
+const COLORS = { a: '#3a7bd5', f: '#e07b39', s: '#27ae60', h: '#c0392b', v: '#9b59b6', ky: '#16a085' };
+const EMOJIS  = { a: '🎡',     f: '🍽️',    s: '🛍️',    h: '🏨',    v: '♻️',    ky: '🧸'    };
 
 function mkIcon(type) {
   const c = COLORS[type], e = EMOJIS[type];
@@ -149,8 +161,8 @@ function mkIcon(type) {
   });
 }
 
-const layers = { a: L.layerGroup(), f: L.layerGroup(), s: L.layerGroup(), h: L.layerGroup() };
-const active  = { a: true, f: true, s: true, h: true };
+const layers = { a: L.layerGroup(), f: L.layerGroup(), s: L.layerGroup(), h: L.layerGroup(), v: L.layerGroup(), ky: L.layerGroup() };
+const active  = { a: true, f: true, s: true, h: true, v: true, ky: true };
 
 function toggle(t) {
   active[t] = !active[t];
@@ -378,14 +390,33 @@ add('s',55.6760,12.5650,'🧸 Lego Store Copenhagen','קניות | חוויה | 
   'בתוך טיבולי יש Lego Store נוסף עם אותו שירות המיני-פיגור — נוח אם אתם שם.',
   'ב\'–ש\': 10:00–20:00 | ש\': 10:00–18:00 | א\': 11:00–18:00','no');
 
-/* ─── KIDS — UNIQUE STORES ─── */
-add('s',55.6783,12.5748,'🎲 Faraos Cigarer — קומיקס ומשחקים','ילדים | חווית חיים | Skindergade 27',
+/* ─── VINTAGE / SECONDHAND — לא ג'אנק, איכות טובה ─── */
+add('v',55.6810,12.5722,'♻️ O-S-V Secondhand','יד שנייה | יוקרתי, אוצרים בקפידה',
+  '<b>חנות היד-שנייה היוקרתית הראשונה בקופנהגן</b> — כל כך מוערכת שיש לה תצוגת אופנה משלה בשבוע האופנה של קופנהגן. קונספט קונסיגנציה עם אוצרות קפדנית: <b>Acne Studios, Ganni, 3.1 Phillip Lim</b> ועוד. שום ג\'אנק — הכל במצב מעולה. Peder Hvitfeldts Stræde 4 (יש גם סניף ב-Møntergade 2).',
+  'חולצות: 150–400 DKK | מעילים/שמלות מעצבים: 400–1,200 DKK',
+  'ליד הלטין קוורטר, 5 דק\' מ-Nørreport. בדקו את שני הסניפים — מלאי שונה.',
+  'ב\'–ה\': 11:00–18:00 | ו\': 11:00–19:00 | ש\': 10:00–17:00 | א\': סגור','no');
+
+add('v',55.6788,12.5705,'♻️ Episode','יד שנייה | זול, מלאי מתחדש שבועי',
+  '<b>חנות יד-שנייה במחירים הוגנים על שתי קומות.</b> מלאי חדש מגיע כל שבוע מכל אירופה — אז יש סיכוי טוב למצוא משהו טוב בכל ביקור. פחות אוצרת מ-O-S-V, יותר מגוון ומחיר נגיש. Larsbjørnsstræde 8 (הלטין קוורטר).',
+  'פריטים: 50–250 DKK רוב הזמן',
+  'מתאים גם לבדוק במהירות בלי תכנון — המחירים מאפשרים "להמר" על פריט.',
+  'ב\'–ה\': 10:00–18:30 | ו\'–ש\': 10:00–19:00 | א\': 11:30–17:30','no');
+
+add('v',55.6900,12.5520,'♻️ Røde Kors Megastore','יד שנייה | גם ילדים! Fælledvej 4, Nørrebro',
+  '<b>חנות הצדקה (כמו גודוויל) הגדולה ביותר בעיר.</b> מתנדבים אוצרים את הפריטים — לא ערימות, אלא מדורגים לפי קטגוריה. <b>יש מדור ילדים נפרד</b> (בגדים + צעצועים) וגם מבחר רחב במידות גדולות. כל הרכישות הולכות לצדקה.',
+  'בגדים: 20–80 DKK | צעצועים: 10–50 DKK | רהיטים זמינים גם',
+  'מעט מחוץ למרכז (Nørrebro) — שלבו עם סיור ברובע (קפה היפסטרי, Assistens Cemetery).',
+  'ב\'–ו\': 11:30–17:30 | ש\': 11:00–16:00 | א\': סגור','no');
+
+/* ─── KIDS — UNIQUE TOY STORES ─── */
+add('ky',55.6783,12.5748,'🎲 Faraos Cigarer — קומיקס ומשחקים','ילדים | חווית חיים | Skindergade 27',
   '<b>המוסד הגדול ביותר לקומיקס, לוח-משחקים ו-RPG בסקנדינביה.</b> 6 חנויות צמודות ברחוב אחד:<br>📚 קומיקסים ומנגה (מארוול, DC, יפניים, אירופאיים)<br>🎲 לוח משחקים ענק (Catan, Ticket to Ride, נישות, קלאסיקות)<br>🃏 Magic: The Gathering, Pokémon TCG, Yu-Gi-Oh<br>🎯 RPG (D&D, Pathfinder, וכל מה שביניהם)<br>🚀 <b>נציג הרשמי היחיד בדנמרק של מוצרי Tintin</b><br><i>📍 ממש ליד Torvehallerne — 5 דקות הליכה מNørreport</i>',
   'לוח משחק: 100–400 DKK | קומיקס: 30–120 DKK | מוצרי Tintin: 60–500 DKK',
   '⭐ הכי מיוחד שיש — לא קיים כדבר הזה בישראל. גם הגדולים (14, 12, 10) יתמכרו. הגיעו עם שעה אחת לפחות.',
   'א\'–ש\': 10:00–17:30 | ש\': 10:00–17:00 | א\': 11:00–16:00','no');
 
-add('s',55.6759,12.5686,'🪀 Fætter BR — צעצועי דנמרק','ילדים | שרשרת דנית | Frederiksberggade 11',
+add('ky',55.6759,12.5686,'🪀 Fætter BR — צעצועי דנמרק','ילדים | שרשרת דנית | Frederiksberggade 11',
   '<b>הרשת הגדולה ביותר לצעצועים בדנמרק</b> — קיים מ-1963. על Strøget המערבית.<br>מה שמייחד אותה:<br>🪵 <b>BRIO</b> — צעצועי עץ שוודיים האייקוניים (רכבות עץ, חלקים) — נמכר ב-50% יותר יקר בישראל<br>🐑 <b>Bamses</b> דניות — דמויות בד קלאסיות<br>🧩 פאזלים אירופאיים שאין בישראל (Ravensburger, Djeco)<br>🎨 ערכות יצירה סקנדינביות לילדים',
   'רכבת BRIO בסיסית: 200–400 DKK | הרחבות: 80–250 DKK | פאזלים: 80–200 DKK',
   'BRIO עולה הרבה פחות ממה שמוכרים בישראל — אם הילדים אוהבים, קנו כאן.',
@@ -410,11 +441,17 @@ add('s',55.6776,12.5793,'🏷️ Acne Archive — אאוטלט מעצב','אאו
   'הסטוק מתחלף בלי הודעה — אל תדחי לסוף הטיול. בדקי בבוקר.',
   'ב\'–ש\': 10:00–18:00 | ש\': 10:00–16:00 | א\': סגור','no');
 
-add('s',55.6770,12.5645,'👗 Zizzi — פלאס-סייז דנית','אופנה | מידות גדולות 34–58 EU',
-  '<b>המותג הדני הגדול ביותר לאופנת פלאס-סייז.</b> עיצוב סקנדינבי מודרני, מידות 34–58 EU — מידות 46–48 בשפע. ג\'ינס, שמלות, בגדי יומיום. ביצוע טוב ומחירים הגיוניים לדנמרק.',
+add('v',55.6249,12.5847,'👗 Zizzi (בתוך Fields)','פלאס-סייז | מידות 34–58 EU',
+  '<b>המותג הדני הגדול ביותר לאופנת פלאס-סייז.</b> ⚠️ תיקון: החנות נמצאת <b>בתוך קניון Fields</b> (קומה 1, Fashion Quarter) — לא ברחוב Strøget כפי שחשבנו קודם! עיצוב סקנדינבי מודרני, מידות 34–58 EU — מידות 46–48 בשפע.',
   'חולצות: 200–400 DKK | שמלות: 400–700 DKK | ג\'ינס: 400–600 DKK',
-  'בקופנהגן יש גם Pont Neuf וZOEY (פלאס-סייז סקנדינביות). חיסכון גדול על משלוח לישראל.',
-  'ב\'–ש\': 10:00–18:00 | ש\': 10:00–16:00','no');
+  'שלבו עם ביקור ב-Blue Planet (Fields נמצא 10 דק\' משם). כניסה ראשית מ-Ørestads Boulevard.',
+  'ב\'–ש\': 10:00–20:00 | ש\'–א\': 10:00–18:00 (שעות הקניון)','no');
+
+add('v',55.6748,12.5673,'👗 Unfold Copenhagen','פלאס-סייז | בוטיק ייעודי, Farvergade 4B',
+  '<b>בוטיק פלאס-סייז ייעודי בלב העיר</b> (לא רשת — מקום קטן ואישי). מידות 40–54. אוצרים בקפידה מותגים דניים נשיים. ליד Rådhuspladsen, 3 דק\' מ-Strøget.',
+  'חולצות: 250–500 DKK | שמלות: 500–900 DKK',
+  'שעות מצומצמות — בדקו אינסטגרם שלהם ליום הביקור, יש גם שבתות מיוחדות.',
+  'ד\'–ו\': 10:00–17:00 | שבתות נבחרות — בדקו מראש','no');
 
 add('s',55.6465,12.2813,'🏬 Copenhagen Designer Outlet','אאוטלט | מחוץ לעיר — 25 דקות ברכבת',
   '<b>האאוטלט הגדול ביותר בדנמרק — 80+ חנויות, 30–70% הנחה.</b><br>מותגים: Levi\'s, Tommy Hilfiger, Nike, Adidas, Calvin Klein, Gant, Samsøe Samsøe, Replay, Puma ועוד. מחובר ל-City2 קניון.<br>📍 Cityringen 6, Taastrup — יש לזום החוצה כדי לראות על המפה!',
@@ -616,6 +653,8 @@ legend.onAdd = () => {
     <div><span class="dot" style="background:#3a7bd5"></span> אטרקציות</div>
     <div><span class="dot" style="background:#e07b39"></span> אוכל ושווקים</div>
     <div><span class="dot" style="background:#27ae60"></span> קניות</div>
+    <div><span class="dot" style="background:#9b59b6"></span> וינטייג' (יד שנייה + פלאס-סייז)</div>
+    <div><span class="dot" style="background:#16a085"></span> צעצועים מיוחדים</div>
     <div><span style="font-size:13px">🧴</span> ביוטי/סטוק = ירוק כהה</div>
     <div><span class="dot" style="background:#c0392b"></span> מלון</div>
     <div style="margin-top:6px;font-size:11px;color:#555;border-top:1px solid #eee;padding-top:5px">⚠️ חובה להזמין | 👍 מומלץ | ✅ ללא הזמנה</div>
