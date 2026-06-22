@@ -45,6 +45,7 @@
   .pi .res-m { background: #fff8e1; color: #856404; }
   .pi .res-n { background: #e8f5e9; color: #2e7d32; }
   .pi .tip { margin-top: 7px; font-size: 12px; color: #777; font-style: italic; border-top: 1px solid #eee; padding-top: 5px; }
+  .pi .transit { margin-top: 6px; font-size: 12px; background: #eef6f4; color: #117a65; border-radius: 6px; padding: 4px 8px; }
   .pi .website { margin-top: 7px; font-size: 13px; }
   .pi .website a { color: #2980b9; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
   .pi .website a:hover { text-decoration: underline; }
@@ -88,6 +89,73 @@ const WEBSITE_URLS = {
   '🎨 Designmuseum Danmark':               'https://www.designmuseum.dk/en',
   '🏛️ המוזיאון הלאומי (Nationalmuseet)':   'https://nationalmuseet.dk/en',
   '👑 ארמון אמלינבורג':                    'https://www.kongehuset.dk/en/palaces-and-the-royal-yacht/changing-of-the-guard/',
+};
+
+/* ─── NEAREST TRANSIT (auto-shown in every popup) ─── */
+const TRANSIT_NOTES = {
+  // Attractions
+  '🎠 טיבולי גארדנס':                     '🚏 København H (S-tog•M3) או Vesterport (S-tog) — שניהם 5 דק׳ הליכה',
+  '🔬 Experimentarium':                    '🚏 Hellerup (S-tog) — 8 דק׳ הליכה',
+  '🐠 Blue Planet / Den Blå Planet':       '🚏 Øresund (M2) — הליכה/בוס 35',
+  '🦒 גן חיות קופנהגן':                    '🚏 Frederiksberg (M1) + הליכה, או בוס 1A/6A עד שער הגן',
+  '🏰 טירת Rosenborg':                     '🚏 Nørreport (S-tog•M1•M2) — 5 דק׳ הליכה',
+  '🌈 Nyhavn':                             '🚏 Kongens Nytorv (M1•M2•M3•M4) — 2 דק׳ הליכה',
+  '⛷️ CopenHill':                          '🚏 בוס 9A, תחנת Vindmøllevej',
+  '🌿 גנים בוטניים + King\'s Garden':      '🚏 Nørreport (S-tog•M1•M2) — 5 דק׳ הליכה',
+  '🧜 The Little Mermaid':                 '🚏 Østerport (S-tog•M3•M4) — 10 דק׳ הליכה, או בוס לאורך הנמל',
+  '🎨 Designmuseum Danmark':               '🚏 Marmorkirken (M4) — 5 דק׳ הליכה',
+  '🏛️ המוזיאון הלאומי (Nationalmuseet)':   '🚏 København H (S-tog•M3) או Nørreport — 8 דק׳ הליכה',
+  '👑 ארמון אמלינבורג':                    '🚏 Kongens Nytorv (M1•M2•M3•M4) — 5 דק׳ הליכה',
+  '🏛️ Christiania':                        '🚏 Christianshavn (M1•M2) — 9 דק׳ הליכה',
+  // Food
+  '🧺 Torvehallerne':                      '🚏 Nørreport (S-tog•M1•M2) — 2 דק׳ הליכה',
+  '🍢 Reffen — שוק רחוב':                  '🚏 בוס 9A עד הסוף (Refshaleøen)',
+  '🥩 Kødbyen — רובע הבשר':                '🚏 Dybbølsbro (S-tog) — 5 דק׳ הליכה',
+  '🍔 Frederiksberg Center — Food Court':  '🚏 Frederiksberg (M1) — 5 דק׳ הליכה',
+  '🦈 Fields Copenhagen — Food':           '🚏 Ørestad (M1) — 2 דק׳ הליכה',
+  '🦞 Nyhavn — מסעדות':                    '🚏 Kongens Nytorv (M1•M2•M3•M4)',
+  '🍰 La Glace — קונדיטוריה':              '🚏 Nørreport — 5 דק׳ הליכה',
+  '🥪 Schønnemann — סמורבורד':             '🚏 Nørreport — 3 דק׳ הליכה',
+  '🍔 Gasoline Grill':                     '🚏 Nørreport/Kongens Nytorv — תלוי סניף',
+  '🥐 Juno the Bakery':                    '🚏 Nordhavn (M4) — 5 דק׳ הליכה, קרוב למלון',
+  '🐷 WarPigs Brewpub':                    '🚏 Dybbølsbro (S-tog) — 5 דק׳ הליכה',
+  '🦐 Kødbyens Fiskebar':                  '🚏 Dybbølsbro (S-tog) — 5 דק׳ הליכה',
+  '☕ Café Bopa':                          '🚏 בוס 1A לאורך Østerbrogade, קרוב למלון',
+  '🥗 Aamanns — סמורבורד מודרני':          '🚏 Østerport (S-tog•M3•M4) — 5 דק׳ הליכה',
+  // Shopping
+  '🛒 Strøget — מדרחוב ראשי':              '🚏 Nørreport או Kongens Nytorv — בשני הקצוות',
+  '🏬 Magasin du Nord':                    '🚏 Kongens Nytorv (M1•M2•M3•M4) — ממש ליד',
+  '🏪 Frederiksberg Center':               '🚏 Frederiksberg (M1) — 5 דק׳ הליכה',
+  '🏗️ Fields Copenhagen':                  '🚏 Ørestad (M1) — 2 דק׳ הליכה',
+  '🛒 Netto / Rema 1000':                  '🚏 תלוי סניף — חפשו ליד התחנה הקרובה',
+  '🎭 Illum — כלבו עיצוב':                 '🚏 Nørreport/Kongens Nytorv — 5 דק׳ הליכה',
+  '🏠 Hay House Copenhagen':               '🚏 Kongens Nytorv — 5 דק׳ הליכה',
+  '👗 Ganni — אופנה דנית':                 '🚏 Kongens Nytorv — 5 דק׳ הליכה',
+  '🏡 Normann Copenhagen':                 '🚏 בוס 1A לאורך Østerbrogade, קרוב למלון',
+  '🧸 Lego Store Copenhagen':              '🚏 Vesterport (S-tog) או Rådhuspladsen (M1•M2)',
+  // Beauty & discount
+  '💸 Normal — דיסקאונט ביוטי':            '🚏 Nørreport — 3 דק׳ הליכה',
+  '🧴 Matas — ספר-פארם דנית':              '🚏 Nørreport/Strøget — 5 דק׳ הליכה',
+  '🏷️ Acne Archive — אאוטלט מעצב':         '🚏 Nørreport — 5 דק׳ הליכה',
+  '🏬 Copenhagen Designer Outlet':         '🚏 Høje Taastrup (S-tog) — ממש ליד, ראו מסלול S-tog',
+  // Vintage
+  '♻️ O-S-V Secondhand':                   '🚏 Nørreport — 5 דק׳ הליכה',
+  '♻️ Episode':                            '🚏 Nørreport — 5 דק׳ הליכה',
+  '♻️ Røde Kors Megastore':                '🚏 Forum (M1) — 8 דק׳ הליכה, או בוס 5C',
+  '♻️ Lidkøb Østerbro':                    '🚏 Svanemøllen (S-tog) — 5 דק׳ הליכה',
+  '♻️ Børneloppen Vanløse':                '🚏 Vanløse (M1, סוף הקו) — ממש ליד',
+  '♻️ Wasteland':                          '🚏 Nørreport — 5 דק׳ הליכה',
+  '♻️ Jérôme Vintage + Rosy Vintage':      '🚏 Vesterport (S-tog) — 8 דק׳ הליכה, או בוס לאורך Vesterbrogade',
+  '♻️ UFF Humana':                         '🚏 Vesterport (S-tog) — 8 דק׳ הליכה',
+  '♻️ Røde Kors Genbrug (Vesterbrogade)':  '🚏 Forum (M1) — 8 דק׳ הליכה',
+  '👗 Zizzi (בתוך Fields)':                '🚏 Ørestad (M1) — 2 דק׳ הליכה',
+  '👗 Unfold Copenhagen':                  '🚏 Rådhuspladsen (M1•M2) — 3 דק׳ הליכה',
+  // Toys
+  '🎲 Faraos Cigarer — קומיקס ומשחקים':    '🚏 Nørreport — 5 דק׳ הליכה',
+  '🪀 Fætter BR — צעצועי דנמרק':           '🚏 Vesterport (S-tog) או Rådhuspladsen',
+  '🚲 Trafiklegepladsen — פארק תנועה לילדים': '🚏 בוס 1A, תחנת Gunnar Nu Hansens Plads — ממש בכניסה',
+  // Hotel
+  '🏨 Adina Apartment Hotel Copenhagen':   '🚏 Nordhavn (M4) 400מ או Østerport (S-tog•M3•M4) 500מ',
   // Food
   '🧺 Torvehallerne':                      'https://torvehallernekbh.dk',
   '🍢 Reffen — שוק רחוב':                 'https://reffen.dk',
@@ -187,9 +255,11 @@ function add(type, lat, lng, name, tagLabel, desc, price, tip, hours, reservatio
   else if (reservation === 'no')          resHtml = `<div class="res res-n">✅ ניתן להגיע ללא הזמנה</div>`;
   const siteUrl = WEBSITE_URLS[name] || '';
   const urlHtml = siteUrl ? `<div class="website"><a href="${siteUrl}" target="_blank" rel="noopener">🌐 לאתר הרשמי ↗</a></div>` : '';
+  const transitNote = TRANSIT_NOTES[name] || '';
+  const transitHtml = transitNote ? `<div class="transit">${transitNote}</div>` : '';
   const tipHtml = tip ? `<div class="tip">💡 ${tip}</div>` : '';
   m.bindPopup(
-    `<div class="pi"><h3>${name}</h3><span class="tag" style="background:${COLORS[type]}">${tagLabel}</span><p>${desc}</p>${priceHtml}${hoursHtml}${resHtml}${urlHtml}${tipHtml}</div>`,
+    `<div class="pi"><h3>${name}</h3><span class="tag" style="background:${COLORS[type]}">${tagLabel}</span><p>${desc}</p>${priceHtml}${hoursHtml}${resHtml}${transitHtml}${urlHtml}${tipHtml}</div>`,
     { maxWidth: 310 }
   );
   layers[type].addLayer(m);
@@ -411,7 +481,7 @@ add('s',55.6760,12.5650,'🧸 Lego Store Copenhagen','קניות | חוויה | 
 add('ky',55.6995,12.5705,'🚲 Trafiklegepladsen — פארק תנועה לילדים','ייחודי! עיר תנועה מיניאטורית, Fælledparken',
   '<b>פארק חינמי וייחודי שמלמד ילדים תעבורה ובטיחות באופניים</b> — עיר תעבורה מיניאטורית בגודל ילדים: רמזורים קטנים, תמרורים, מעברי חצייה, תחנת דלק זעירה. ילדים מתחת ל-130 ס"מ יכולים לשאול אופניים/אופני איזון/תלת-אופן בחינם בשעות הצוות. בקצה השני: נדנדות, רשת טיפוס, ארגז חול גדול. Gunnar Nu Hansens Plads 10, Østerbro — קרוב מאוד למלון!',
   'חינם לגמרי, גם השאלת האופניים',
-  '⭐ מצוין לתאומים — סביבה מובנית, חוקים ברורים וויזואליים, גדורה ובטוחה, גירוי נמוך. קרוב למלון (כ-20 דק׳ הליכה). בשעות הצוות יש פיקוח חינוכי; מחוץ לשעות אפשר עדיין להיכנס לשטח הגדור (פתוח 24/7) אבל בלי השאלת אופניים/ליווי.',
+  '⭐ מצוין לתאומים — סביבה מובנית, חוקים ברורים וויזואליים, גדורה ובטוחה, גירוי נמוך. כ-1.7 ק"מ מהמלון — כ-25 דק׳ הליכה, או 8-10 דק׳ באופניים. בשעות הצוות יש פיקוח חינוכי; מחוץ לשעות אפשר עדיין להיכנס לשטח הגדור (פתוח 24/7) אבל בלי השאלת אופניים/ליווי.',
   'קיץ (שבוע 18–41): ב\'–ו\' 9:00–17:00 | שבועות 24–34: גם ש\'–א\' 10:00–17:00 (שבועות זוגיים) | השטח עצמו פתוח 24/7','no');
 
 /* ─── VINTAGE / SECONDHAND — לא ג'אנק, איכות טובה ─── */
@@ -520,6 +590,12 @@ add('s',55.6465,12.2813,'🏬 Copenhagen Designer Outlet','אאוטלט | מחו
   'ב\'–ש\': 10:00–20:00 | ש\': 10:00–18:00 | א\': 10:00–17:00','no');
 
 /* ─── DESIGN MUSEUM (Julia solo) ─── */
+add('a',55.6735,12.5945,'🏛️ Christiania','אטרקציה | חינם | רובע אלטרנטיבי',
+  'העיר החופשית כריסטיאניה — קהילה אלטרנטיבית עצמאית מ-1971. ארכיטקטורה ייחודית, גרפיטי, בתי קפה. <b>שימו לב:</b> יש אזור עם שוק קנאביס פתוח (Pusher Street) — לא בעיה אבל כדאי לדעת. עם ילד 7 מומלץ להישאר באזורים האחרים (גרפיטי, קפה, אוכל).',
+  'כניסה: חינם',
+  'המשך הליכה צפונה (~15 דק׳) מוביל ישר ל-Reffen.',
+  'פתוח 24/7 (אזור ציבורי) | סיורים מודרכים: בדקו שעות באתר','no');
+
 add('a',55.6913,12.5878,'🎨 Designmuseum Danmark','מוזיאון עיצוב | ג\'וליה בלבד',
   '<b>המוזיאון הלאומי לעיצוב דני.</b> Bredgade 68 — 5 דקות הליכה מ-Marmorkirken (M4), ~15 דקות מהמלון.<br><br><b>תערוכות ביולי 2026:</b><br>🖼️ <b>Hokusai</b> — 40 הדפסי עץ יפניים (עד 9/8)<br>📐 <b>LABORATORIUM</b> — חדר הנסיונות של Kontrapunkt (עד 18/10)<br>👘 <b>Japan Modern Poster</b> — עיצוב גרפי יפני (עד 9/8)<br>🧵 <b>Nikoline Liv Andersen</b> — אמנות טקסטיל (עד 27/9)',
   '🎟️ מבוגר: 140 DKK | Copenhagen Card: <b>חינם!</b> | קבוצה 10+: 110 DKK/אדם',
@@ -611,6 +687,22 @@ mkSt(55.6877, 12.5839, 'Marmorkirken', 'M4', '#0066cc',
   'M4 — בין Nordhavn לKongens Nytorv.<br>→ Designmuseum Danmark: 5 דקות הליכה צפונה-מזרחה<br>→ מהמלון: M4 מNordhavn, 2 תחנות (~5 דקות נסיעה)');
 mkSt(55.6804, 12.5289, 'Frederiksberg', 'M1', '#00a050',
   'M1 — ~6 תחנות מKongens Nytorv.<br>→ גן חיות קופנהגן: 12 דקות הליכה דרומה');
+mkSt(55.6720, 12.5880, 'Christianshavn', 'M1 • M2', '#00a050',
+  'על הקו המשולב M1/M2, בין Kongens Nytorv לפיצול הקווים.<br>→ Christiania: 9 דקות הליכה<br>→ המשך לReffen: בוס 9A או 20 דקות הליכה');
+mkSt(55.6745, 12.5635, 'Vesterport', 'S-tog', '#901447',
+  'S-tog — ממש ליד טיבולי ומרכז העיר המערבי.<br>→ Lego Store, Vesterbrogade: 5 דקות הליכה');
+mkSt(55.6759, 12.5683, 'Rådhuspladsen', 'M1 • M2', '#1a1a2e',
+  'כיכר העירייה — מטרו + צומת אוטובוסים מרכזי.<br>→ תחילת Strøget, Unfold Copenhagen: 3 דקות הליכה');
+mkSt(55.6804, 12.5480, 'Forum', 'M1', '#00a050',
+  'M1 — בין Frederiksberg לKongens Nytorv.<br>→ Vesterbrogade, Røde Kors Genbrug: 8 דקות הליכה');
+mkSt(55.6660, 12.5560, 'Dybbølsbro', 'S-tog', '#901447',
+  'S-tog — לKødbyen (רובע הבשר).<br>→ WarPigs, Kødbyens Fiskebar: 5 דקות הליכה');
+mkSt(55.7115, 12.5790, 'Svanemøllen', 'S-tog', '#901447',
+  'S-tog — צפונה מØsterport, קרוב למלון.<br>→ Lidkøb Østerbro (יד שנייה): 5 דקות הליכה');
+mkSt(55.6830, 12.4786, 'Vanløse', 'M1 (סוף הקו)', '#00a050',
+  'סוף קו M1.<br>→ Børneloppen Vanløse (יד שנייה ילדים): ממש ליד');
+mkSt(55.6280, 12.5800, 'Ørestad', 'M1', '#00a050',
+  'M1 — באמאגר.<br>→ Fields Copenhagen + Zizzi: 2 דקות הליכה');
 
 /* ── ROUTES: TRANSIT BACKBONE ── */
 // Walking: מלון → Nordhavn M4 (לBlue Planet, Zoo, Nyhavn via metro)
@@ -672,6 +764,23 @@ mkRoute([HOTEL, [55.700, 12.594], [55.696, 12.597], [55.6929, 12.5993]], '#888',
 mkRoute([[55.6877, 12.5839], [55.6895, 12.5858], [55.6913, 12.5878]], '#888', 3, '5,5',
   '🚶 הליכה: Marmorkirken M4 → Designmuseum (~5 דקות)\n🎨 מסלול של ג\'וליה: מלון → Nordhavn M4 → Marmorkirken → מוזיאון (~15 דקות סה"כ)');
 
+/* ── יום 1: מלון → Trafiklegepladsen (לפני צ'ק-אין) ── */
+const TRAFIKLEGEPLADS = [55.6995, 12.5705];
+mkRoute([HOTEL, [55.706, 12.586], [55.703, 12.582], [55.700, 12.575], TRAFIKLEGEPLADS], '#e07b39', 5, '10,4',
+  '🚌 בוס 1A: מהמלון (תחנה קרובה ב-Østerbrogade) דרומה עד Gunnar Nu Hansens Plads (~10 דקות)<br>📍 יום 1 — לפני צ\'ק-אין, אחרי השארת מזוודות<br>חלופה: הליכה ~25 דקות, או אופניים ~10 דקות');
+
+/* ── יום 2: Nyhavn → Strøget ── */
+mkRoute([[55.6796, 12.5912], [55.6790, 12.5850], [55.6775, 12.5780]], '#888', 3, '5,5',
+  '🚶 הליכה: Nyhavn → Strøget (~8 דקות)<br>📍 יום 2 — המשך טבעי אחרי השייט');
+
+/* ── יום 7: Blue Planet → Christianshavn → Christiania → Reffen ── */
+mkRoute([ORESUND, [55.652, 12.598], [55.669, 12.591], [55.6720, 12.5880]], '#c49a00', 6, null,
+  '🚇 M2: Øresund → Christianshavn (~12 דקות, כיוון העיר)<br>📍 יום 7 — מBlue Planet לכריסטיאניה');
+mkRoute([[55.6720, 12.5880], [55.6728, 12.5910], [55.6735, 12.5945]], '#888', 3, '5,5',
+  '🚶 הליכה: Christianshavn → Christiania (~9 דקות)');
+mkRoute([[55.6735, 12.5945], [55.665, 12.595], [55.6630, 12.5913]], '#e07b39', 5, '10,4',
+  '🚌 בוס 9A: Christiania → Reffen (~10 דקות) | חלופה: הליכה ~15 דקות צפונה');
+
 /* ── ROUTE: Copenhagen Designer Outlet (Taastrup) ── */
 // S-tog: København H → Høje Taastrup (~25 דקות, קו E)
 mkRoute([KBH_H, [55.658, 12.506], [55.660, 12.389], [55.657, 12.282]], '#901447', 5, null,
@@ -718,6 +827,7 @@ legend.onAdd = () => {
     <div><span style="font-size:13px">🧴</span> ביוטי/סטוק = ירוק כהה</div>
     <div><span class="dot" style="background:#c0392b"></span> מלון</div>
     <div style="margin-top:6px;font-size:11px;color:#555;border-top:1px solid #eee;padding-top:5px">⚠️ חובה להזמין | 👍 מומלץ | ✅ ללא הזמנה</div>
+    <div style="margin-top:6px;font-size:11px;color:#117a65;border-top:1px solid #eee;padding-top:5px">🚏 בכל פופ-אפ מופיעה התחנה הקרובה ביותר</div>
     <div style="margin-top:6px;font-size:12px;font-weight:bold;border-top:1px solid #eee;padding-top:5px">🛤️ מסלולים מהמלון</div>
     <div><span style="display:inline-block;width:22px;height:4px;background:#901447;margin-left:4px;vertical-align:middle;border-radius:2px"></span> S-tog (רכבת עירונית)</div>
     <div><span style="display:inline-block;width:22px;height:4px;background:#0066cc;margin-left:4px;vertical-align:middle;border-radius:2px"></span> M4 (מטרו כחול)</div>
