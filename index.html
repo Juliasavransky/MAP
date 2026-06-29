@@ -33,6 +33,8 @@
   .filter-btn.v.on { background: #9b59b6; color: white; }
   .filter-btn.ky  { border-color: #16a085; color: #16a085; }
   .filter-btn.ky.on { background: #16a085; color: white; }
+  .filter-btn.pg  { border-color: #e67e22; color: #e67e22; }
+  .filter-btn.pg.on { background: #e67e22; color: white; }
   #day-select { padding: 7px 14px; border-radius: 20px; border: 2px solid #1a1a2e; color: #1a1a2e; font-size: 13px; font-weight: bold; background: #fff; cursor: pointer; }
   #day-select.on { background: #1a1a2e; color: white; }
   .filter-btn.disabled { opacity: 0.35; cursor: not-allowed; }
@@ -72,6 +74,7 @@
   <div class="filter-btn s on" id="btn-s" onclick="toggle('s')">🟢 קניות</div>
   <div class="filter-btn v on" id="btn-v" onclick="toggle('v')">♻️ וינטייג'</div>
   <div class="filter-btn ky on" id="btn-ky" onclick="toggle('ky')">🧸 צעצועים</div>
+  <div class="filter-btn pg on" id="btn-pg" onclick="toggle('pg')">🛝 מגרשי משחקים</div>
 
   <div class="filter-btn h on" id="btn-h" onclick="toggle('h')">🔴 מלון</div>
   <div class="filter-btn tr" id="btn-tr" onclick="toggleTransit()">🚇 תחבורה ציבורית</div>
@@ -176,6 +179,13 @@ const TRANSIT_NOTES = {
   '🎲 Faraos Cigarer — קומיקס ומשחקים':    '🚏 Nørreport — 5 דק׳ הליכה',
   '🪀 Fætter BR — צעצועי דנמרק':           '🚏 Vesterport (S-tog) או Rådhuspladsen',
   '🚲 Trafiklegepladsen — פארק תנועה לילדים': '🚏 בוס 1A, תחנת Gunnar Nu Hansens Plads — ממש בכניסה',
+  // Playgrounds
+  '🛝 Nikolaj Plads — מגרש משחקים':         '🚏 ממש על Strøget — Nikolaj Plads ליד Nikolaj Kunsthal. ללא נסיעה.',
+  '🛝 Konditaget Lüders — גג נורדהאון':    '🚏 Nordhavn (M4) — 5 דק׳ הליכה. קרוב מאוד למלון!',
+  '🛝 Hauser Plads — מגרש משחקים':         '🚏 Nørreport (S-tog•M1•M2) — 5 דק׳ הליכה. ליד Torvehallerne.',
+  '🛝 KU.BE — מגרש פנימי חינם':             '🚏 Frederiksberg (M1) + הליכה, או Forum (M1) — 8 דק׳.',
+  '🛝 Havnegade — טרמפולינות על הנמל':      '🚏 הליכה מ-Nyhavn או מ-DAC BLOX — 5-8 דק׳.',
+  '🛝 Skydebanehaven — ויסטרברו':           '🚏 Dybbølsbro (S-tog) — 8 דק׳ הליכה. ליד Kødbyen.',
   // Hotel
   '🏨 Adina Apartment Hotel Copenhagen':   '🚏 Nordhavn (M4) 400מ או Østerport (S-tog•M3•M4) 500מ',
   // Food
@@ -246,8 +256,8 @@ function toggleTransit() {
   }
 }
 
-const COLORS = { a: '#3a7bd5', f: '#e07b39', s: '#27ae60', h: '#c0392b', v: '#9b59b6', ky: '#16a085' };
-const EMOJIS  = { a: '🎡',     f: '🍽️',    s: '🛍️',    h: '🏨',    v: '♻️',    ky: '🧸'    };
+const COLORS = { a: '#3a7bd5', f: '#e07b39', s: '#27ae60', h: '#c0392b', v: '#9b59b6', ky: '#16a085', pg: '#e67e22' };
+const EMOJIS  = { a: '🎡',     f: '🍽️',    s: '🛍️',    h: '🏨',    v: '♻️',    ky: '🧸',    pg: '🛝'    };
 
 function mkIcon(type) {
   const c = COLORS[type], e = EMOJIS[type];
@@ -257,8 +267,8 @@ function mkIcon(type) {
   });
 }
 
-const layers = { a: L.layerGroup(), f: L.layerGroup(), s: L.layerGroup(), h: L.layerGroup(), v: L.layerGroup(), ky: L.layerGroup() };
-const active  = { a: true, f: true, s: true, h: true, v: true, ky: true };
+const layers = { a: L.layerGroup(), f: L.layerGroup(), s: L.layerGroup(), h: L.layerGroup(), v: L.layerGroup(), ky: L.layerGroup(), pg: L.layerGroup() };
+const active  = { a: true, f: true, s: true, h: true, v: true, ky: true, pg: true };
 const markersByName = {};   // name -> marker, populated by add() — used by day-plan mode
 const stationsByName = {};  // name -> station marker, populated by mkSt()
 let dayMode = null;         // currently-selected day id, or null = normal category-filter mode
@@ -662,6 +672,43 @@ add('h',55.7025,12.5914,'🏨 Adina Apartment Hotel Copenhagen','מלון | בס
   'check-in 15:00 | check-out 11:00 | בריכה 05:00–23:00 | ארוחת בוקר א\'–ה\' 06:30–10:00','no');
 
 
+/* ─── PLAYGROUNDS ─── */
+add('pg',55.6787,12.5812,'🛝 Nikolaj Plads — מגרש משחקים','מגרש משחקים | חינם | ממש על Strøget',
+  'מגרש קטן וממוקם מאוד — בצל הכנסייה הירוקה של Nikolaj Kunsthal. מבנה טיפוס עם מנהרות, גשר חבלים ומגלשה + נדנדות + גזעי איזון. מושלם לעצור בזמן קניות ב-Strøget.',
+  'חינם לגמרי',
+  'ממש ב-Nikolaj Plads — 1 דק׳ מ-Strøget, 7 דק׳ מחנות הלגו. ⚠️ אין שירותים ציבוריים.',
+  'פתוח 24/7 (חוץ)','no');
+
+add('pg',55.7075,12.5940,'🛝 Konditaget Lüders — גג נורדהאון','מגרש משחקים | חינם | 5 דק׳ מהמלון!',
+  'מגרש צבעוני בוורוד-אדום על גג חניון בנורדהאון — 5 דק׳ הליכה מהמלון! 5 טרמפולינות, מגדל טיפוס על חבלים, נדנדות מסוגים שונים, גבעות קטנות, נוף לנמל ולאוניות שייט.',
+  'חינם לגמרי',
+  'עולים במדרגות מצד החניון — Lüdersvej 5. קרוב מאוד למלון, מושלם להוצאת אנרגיה ממש ליד הבסיס.',
+  'פתוח 24/7 (חוץ)','no');
+
+add('pg',55.6826,12.5737,'🛝 Hauser Plads — מגרש משחקים','מגרש משחקים | חינם | ליד Torvehallerne',
+  'מגרש עירוני קומפקטי ליד Nørreport ו-Torvehallerne. ההייליט: שתי כיפות מתכת ענקיות — הילדים מטפסים, מגלשים ומשחקים בהן בלי סוף. גם נדנדות + רשת טיפוס + חבל איזון. בקיץ לפעמים יש משחקי מים.',
+  'חינם לגמרי',
+  'ממש ליד Torvehallerne — קל לשלב ביום 4 (אחרי ארוחת הצהריים בשוק). Hauser Plads, ליד המגדל העגול (Rundetårn).',
+  'פתוח 24/7 (חוץ)','no');
+
+add('pg',55.6799,12.5196,'🛝 KU.BE — מגרש פנימי חינם','מגרש פנימי | חינם | מפוקח | ירידת גשם!',
+  'מרכז תרבות פרדריקסברג — מגרש משחקים מקורה ענק על 3 קומות, חינמי לגמרי ועם פיקוח! מגלשות בין קומות, קירות טיפוס, רשתות, מבוך עכברים ענק, פינג-פונג. משפחות עם ילדים בילו שם 2-3 שעות. מושלם ליום גשום.',
+  'חינם לגמרי | פיקוח ילדים כלול',
+  'קרוב לגן החיות ול-Frederiksberg Center — שלבו ביום 5. Lipkesgade 3, 2000 Frederiksberg. ⚠️ בדקו שעות מראש באתר KU.BE.',
+  'ב׳–ש׳ — בדקו shours באתר kube.dk','no');
+
+add('pg',55.6755,12.5895,'🛝 Havnegade — טרמפולינות על הנמל','טרמפולינות | חינם | ממש על הנמל',
+  '5 טרמפולינות שטוחות משובצות ברצפת טיילת הנמל. פשוט אבל אפקטיבי — הילדים קופצים עשרות דקות בזמן שההורים נחים עם נוף מדהים לנמל. בדרך הטבעית בין Nyhavn ל-DAC BLOX.',
+  'חינם לגמרי',
+  'לאורך Havnegade — הטיילת הדרומית של הנמל הפנימי. ⚠️ אין שירותים ציבוריים.',
+  'פתוח 24/7 (חוץ)','no');
+
+add('pg',55.6685,12.5548,'🛝 Skydebanehaven — ויסטרברו','מגרש משחקים | חינם | ליד Kødbyen',
+  'פארק ענק ב-Vesterbro ליד רובע הבשר. ייחודי: מבנה טיפוס בצורת תוכי ענק עם מגלשה + רוכסן (זיפליין) + השאלת אופניים וקורקינטים חינמית! בקיץ יש גם משחקי מים. מושלם בשילוב עם ארוחת ערב ב-Kødbyen.',
+  'חינם לגמרי | השאלת רכב: ב׳–ו׳ 9:00–17:00',
+  'שם בדנית: Skydebanehaven (גן מגרש הירי). כניסה דרך שער היסטורי מרשים. Skydebanegade 2, Vesterbro.',
+  'פתוח כל יום | השאלת אופניים: ב׳–ו׳ 9:00–17:00','no');
+
 /* ─── TRANSIT STATIONS & ROUTES ─── */
 const stLayer = L.layerGroup();
 let stActive = false, rtActive = false;
@@ -1034,7 +1081,7 @@ const dayMarkerLayer = L.layerGroup();
 const dayRouteLayer  = L.layerGroup();
 
 function setFiltersEnabled(enabled) {
-  ['a','f','s','v','ky','h','rt','st'].forEach(t => {
+  ['a','f','s','v','ky','pg','h','rt','st'].forEach(t => {
     const btn = document.getElementById('btn-'+t);
     if (btn) btn.classList.toggle('disabled', !enabled);
   });
@@ -1132,6 +1179,7 @@ legend.onAdd = () => {
     <div><span class="dot" style="background:#27ae60"></span> קניות</div>
     <div><span class="dot" style="background:#9b59b6"></span> וינטייג' (יד שנייה + פלאס-סייז)</div>
     <div><span class="dot" style="background:#16a085"></span> צעצועים מיוחדים</div>
+    <div><span class="dot" style="background:#e67e22"></span> מגרשי משחקים (ליד קניות/אוכל)</div>
     <div><span style="font-size:13px">🧴</span> ביוטי/סטוק = ירוק כהה</div>
     <div><span class="dot" style="background:#c0392b"></span> מלון</div>
     <div style="margin-top:6px;font-size:11px;color:#555;border-top:1px solid #eee;padding-top:5px">⚠️ חובה להזמין | 👍 מומלץ | ✅ ללא הזמנה</div>
