@@ -272,18 +272,28 @@ const active  = { a: true, f: true, s: true, h: true, v: true, ky: true, pg: tru
 const markersByName = {};   // name -> marker, populated by add() — used by day-plan mode
 const stationsByName = {};  // name -> station marker, populated by mkSt()
 let dayMode = null;         // currently-selected day id, or null = normal category-filter mode
+let dayMarkersByType = {};  // in day-mode: { 'a': [m, m], 'f': [...], ... } for per-type toggling
 
 function toggle(t) {
-  if (dayMode) return; // category filters are disabled while a specific day is selected
   active[t] = !active[t];
   const btn = document.getElementById('btn-'+t);
-  if (active[t]) { layers[t].addTo(map); btn.classList.add('on'); }
-  else           { map.removeLayer(layers[t]); btn.classList.remove('on'); }
-  if (typeof refreshRoutes === 'function') refreshRoutes();
+  btn.classList.toggle('on', active[t]);
+
+  if (dayMode) {
+    // In day-mode: show/hide only this day's markers of this type
+    (dayMarkersByType[t] || []).forEach(m => {
+      if (active[t]) dayMarkerLayer.addLayer(m);
+      else           dayMarkerLayer.removeLayer(m);
+    });
+  } else {
+    if (active[t]) layers[t].addTo(map); else map.removeLayer(layers[t]);
+    if (typeof refreshRoutes === 'function') refreshRoutes();
+  }
 }
 
 function add(type, lat, lng, name, tagLabel, desc, price, tip, hours, reservation) {
   const m = L.marker([lat, lng], { icon: mkIcon(type) });
+  m._catType = type;
   const priceHtml = price ? `<div class="price">💰 ${price}</div>` : '';
   const hoursHtml = hours ? `<div class="hours">🕐 ${hours}</div>` : '';
   let resHtml = '';
@@ -977,7 +987,8 @@ const DAY_PLANS = {
       { coords:[NORDHAVN,OSTERPORT,[55.688,12.583],KNTORV], color:'#0066cc', weight:6, dash:null, label:'🚇 M4: Nordhavn → Kongens Nytorv (~8 דק׳)' },
       { coords:[KNTORV,[55.680,12.590],[55.6796,12.5912]], color:'#888', weight:3, dash:'5,5', label:'🚶 Kongens Nytorv → Nyhavn (2 דק׳)' },
       { coords:[[55.6796,12.5912],[55.6808,12.5870]], color:'#e07b39', weight:3, dash:'8,5', label:'🍽️ Nyhavn → Magasin food court (2 דק׳)' },
-      { coords:[KNTORV,[55.678,12.585],[55.676,12.583],[55.6749,12.5783]], color:'#00a050', weight:5, dash:null, label:'🚇 M1: Kongens Nytorv → Gammel Strand (1 תחנה, ~3 דק׳) + הליכה ל-DAC BLOX (~5 דק׳)' },
+      { coords:[[55.6796,12.5912],[55.676,12.590],[55.6735,12.5845]], color:'#f5a623', weight:5, dash:null, label:'🚢 Havnebussen 991: Nyhavn → Christians Brygge (2 תחנות, ~8 דק׳) — כלול ב-CC כתחבורה ציבורית!' },
+      { coords:[[55.6735,12.5845],[55.6742,12.5813],[55.6749,12.5783]], color:'#888', weight:3, dash:'5,5', label:'🚶 הליכה: Christians Brygge → BLOX/DAC (~4 דק׳)' },
       { coords:[[55.6749,12.5783],[55.676,12.576],[55.6775,12.5780]], color:'#888', weight:3, dash:'5,5', label:'🚶 הליכה: DAC → Strøget (~10 דק׳)' },
       { coords:[[55.6775,12.5780],[55.679,12.583],KNTORV], color:'#888', weight:3, dash:'5,5', label:'🚶 הליכה: Strøget → Kongens Nytorv (~8 דק׳)' },
       { coords:[KNTORV,[55.688,12.583],OSTERPORT,NORDHAVN], color:'#0066cc', weight:6, dash:null, label:'🚇 M4: Kongens Nytorv → Nordhavn (~8 דק׳)' },
@@ -1106,7 +1117,17 @@ function selectDay(id) {
 
   dayMode = id;
   sel.classList.add('on');
-  setFiltersEnabled(false);
+  dayMarkersByType = {};
+
+  // Keep category filter buttons active; disable only route/transit overlays
+  ['rt','st'].forEach(t => {
+    const btn = document.getElementById('btn-'+t);
+    if (btn) btn.classList.add('disabled');
+  });
+  ['a','f','s','v','ky','pg','h'].forEach(t => {
+    const btn = document.getElementById('btn-'+t);
+    if (btn) btn.classList.remove('disabled');
+  });
 
   // hide every "show all" layer — day mode shows only this day's own selection
   Object.values(layers).forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
@@ -1115,11 +1136,23 @@ function selectDay(id) {
 
   const plan = DAY_PLANS[id];
   const bounds = [];
-  const addedMarkers = new Set(); // tracks markers already placed, so the proximity search below doesn't duplicate them
+  const addedMarkers = new Set();
+
+  // Helper: register a typed marker into dayMarkersByType and conditionally add to layer
+  function registerDayMarker(m, t) {
+    if (!dayMarkersByType[t]) dayMarkersByType[t] = [];
+    dayMarkersByType[t].push(m);
+    if (active[t]) dayMarkerLayer.addLayer(m);
+  }
 
   (plan.stops || []).forEach(name => {
     const m = markersByName[name];
-    if (m) { dayMarkerLayer.addLayer(m); bounds.push(m.getLatLng()); addedMarkers.add(m); }
+    if (m) {
+      const t = m._catType || 'a';
+      registerDayMarker(m, t);
+      bounds.push(m.getLatLng());
+      addedMarkers.add(m);
+    }
   });
   (plan.stations || []).forEach(name => {
     const m = stationsByName[name];
@@ -1136,19 +1169,18 @@ function selectDay(id) {
     bounds.push(ex.coords);
   });
 
-  // Surface food/shopping that isn't formally on the day's route but is genuinely
-  // nearby one of today's stops (excluding the hotel itself, which is "near" something every day)
+  // Show ALL nearby category markers (a, f, s, v, ky, pg) within proximity of today's stops
   const anchors = (plan.stops || [])
     .filter(name => name !== '🏨 Adina Apartment Hotel Copenhagen' && markersByName[name])
     .map(name => { const ll = markersByName[name].getLatLng(); return [ll.lat, ll.lng]; });
   if (anchors.length) {
-    ['f','s'].forEach(cat => {
+    ['a','f','s','v','ky','pg'].forEach(cat => {
       layers[cat].eachLayer(m => {
         if (addedMarkers.has(m)) return;
         const ll = m.getLatLng();
         const isNearby = anchors.some(a => haversineKm(a, [ll.lat, ll.lng]) <= NEARBY_RADIUS_KM);
         if (isNearby) {
-          dayMarkerLayer.addLayer(m);
+          registerDayMarker(m, cat);
           addedMarkers.add(m);
           bounds.push(ll);
         }
@@ -1192,6 +1224,7 @@ legend.onAdd = () => {
     <div><span style="display:inline-block;width:22px;height:4px;background:#0066cc;margin-left:4px;vertical-align:middle;border-radius:2px"></span> M4 (מטרו כחול)</div>
     <div><span style="display:inline-block;width:22px;height:4px;background:#00a050;margin-left:4px;vertical-align:middle;border-radius:2px"></span> M1 (מטרו ירוק)</div>
     <div><span style="display:inline-block;width:22px;height:4px;background:#c49a00;margin-left:4px;vertical-align:middle;border-radius:2px"></span> M2 (מטרו צהוב)</div>
+    <div><span style="display:inline-block;width:22px;height:4px;background:#f5a623;margin-left:4px;vertical-align:middle;border-radius:2px"></span> 🚢 Havnebussen (אוטובוס הנמל הצהוב)</div>
     <div><span style="display:inline-block;width:22px;height:4px;background:#e07b39;margin-left:4px;vertical-align:middle;border-radius:2px;border-bottom:2px dashed #e07b39"></span> אוטובוס / מסעדה קרובה</div>
     <div><span style="display:inline-block;width:22px;height:4px;background:#888;margin-left:4px;vertical-align:middle;border-radius:2px"></span> - - הליכה</div>
   `;
